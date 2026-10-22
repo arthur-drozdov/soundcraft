@@ -55,6 +55,9 @@ pub struct EditLayout {
     pub content_h: f32,
     /// While Zoom Toggle is on: the vertical scroll to go back to.
     zoom_back: Option<f32>,
+    /// A track whose row `view.reveal` asked to bring into view, scrolled to once the rows are laid out.
+    #[serde(skip)]
+    pub reveal_track: Option<u64>,
     /// Follow-hold: the view was moved by something other than the playhead
     /// follow (a manual pan, scrollbar, universe jump, or programmatic
     /// scroll) during playback, so timeline auto-scroll stays paused until
@@ -193,15 +196,35 @@ fn status_bar(app: &mut SoundApp, ui: &mut Ui) {
         app.ui.status
     );
     soundcraft_model::truncate_chars(&mut left, 4 * soundcraft_model::MAX_NAME_CHARS);
-    ui.painter().text(pos2(r.min.x + 10.0, r.center().y), Align2::LEFT_CENTER, left, regular(11.0), t.text_dim);
+    let left_w = ui.painter().text(pos2(r.min.x + 10.0, r.center().y), Align2::LEFT_CENTER, left, regular(11.0), t.text_dim).width();
     let undo = app.engine.undo_label().map_or(String::new(), |l| format!("Undo {l}"));
-    ui.painter().text(
-        pos2(r.max.x - 10.0, r.center().y),
-        Align2::RIGHT_CENTER,
-        if app.frame_ms < 50.0 { format!("{undo}   {:.1} ms/frame", app.frame_ms) } else { undo },
-        regular(11.0),
-        t.text_dim,
-    );
+    let right = if app.frame_ms < 50.0 { format!("{undo}   {:.1} ms/frame", app.frame_ms) } else { undo };
+    let right_w = ui.painter().text(pos2(r.max.x - 10.0, r.center().y), Align2::RIGHT_CENTER, right, regular(11.0), t.text_dim).width();
+    agent_status(app, ui, r, left_w, right_w);
+}
+
+/// `Agent: <label>` for the command an agent last ran, between the session summary and the undo
+/// label, for [`crate::AgentStatus::SHOW_SECS`]; skipped when the bar is too narrow to fit it
+/// beside the rest. Clears itself afterwards.
+fn agent_status(app: &mut SoundApp, ui: &mut Ui, bar: Rect, left_w: f32, right_w: f32) {
+    let now = ui.input(|i| i.time);
+    let Some(a) = app.agent_status.as_ref() else { return };
+    let remaining = a.remaining(now);
+    if remaining <= 0.0 {
+        app.agent_status = None;
+        return;
+    }
+    ui.ctx().request_repaint_after(std::time::Duration::from_secs_f64(remaining.clamp(0.05, 1.0)));
+    let t = Tokens::current();
+    let mut text = a.text();
+    soundcraft_model::truncate_chars(&mut text, 60);
+    let colour = if a.failed { t.text_dim.lerp_to_gamma(Color32::from_rgb(230, 120, 100), 0.6) } else { t.accent };
+    let galley = ui.painter().layout_no_wrap(text, regular(11.0), colour);
+    let right_edge = bar.max.x - 10.0 - right_w - 24.0;
+    let left_edge = bar.min.x + 10.0 + left_w + 24.0;
+    if right_edge - galley.size().x >= left_edge {
+        ui.painter().galley(pos2(right_edge - galley.size().x, bar.center().y - galley.size().y * 0.5), galley, colour);
+    }
 }
 
 pub(crate) fn main_area(app: &mut SoundApp, ui: &mut Ui) {
@@ -234,6 +257,7 @@ fn main_area_content(app: &mut SoundApp, ui: &mut Ui) {
     let rulers_rect = Rect::from_min_max(pos2(full.min.x, full.min.y), pos2(full.max.x, full.min.y + rulers_h));
     app.edit_layout.timeline = [tl.min.x, tl.min.y, tl.max.x, tl.max.y];
     follow_zoom_toggle(app);
+    follow_reveal(app);
     ui.painter().rect_filled(full, 0.0, t.window_bg);
     scroll_and_zoom(app, ui, full, tl);
     draw_rulers(app, ui, rulers_rect, tl, &rulers);
@@ -407,6 +431,23 @@ fn follow_zoom_toggle(app: &mut SoundApp) {
         }
         (None, Some(y)) => (l.scroll_y, l.zoom_back) = (y, None),
         _ => {}
+    }
+}
+
+/// `view.reveal` names a track: scroll its row into view, centred when it fits, as the rows were
+/// laid out last frame. A row already in view stays where it is, and a track that is hidden or
+/// gone is ignored. Waits for the first layout.
+fn follow_reveal(app: &mut SoundApp) {
+    let l = &mut app.edit_layout;
+    let Some(id) = l.reveal_track else { return };
+    let view_h = l.timeline[3] - l.timeline[1];
+    let Some(top) = l.rows.first().map(|(_, r)| r[1]).filter(|_| view_h > 0.0) else { return };
+    l.reveal_track = None;
+    let Some((_, r)) = l.rows.iter().find(|(t, _)| *t == id) else { return };
+    let (row_top, row_h) = (r[1] - top, r[3] - r[1]);
+    if row_top < l.scroll_y || row_top + row_h > l.scroll_y + view_h {
+        l.scroll_y = row_top - ((view_h - row_h) / 2.0).max(0.0);
+        l.scroll_by(0.0, view_h);
     }
 }
 
@@ -2623,6 +2664,15 @@ fn clip_context_menu(app: &mut SoundApp, ui: &mut Ui, clip: Option<ClipId>) {
     if ui.button("Delete").clicked() {
         let _ = app.run("edit.select", json!({"clips": ids}));
         let _ = app.run("edit.clear", json!({}));
+    }
+    // Last, so the items above keep their places. A clip of audio can become a MIDI clip of the
+    // notes it plays (one voice at a time).
+    let audio = app.engine.session().find_clip(c).filter(|(_, x)| matches!(x.content, soundcraft_model::ClipContent::Audio { .. }));
+    if let Some((track, start, end)) = audio.map(|(t, x)| (t, x.start, x.end())) {
+        ui.separator();
+        if ui.button("Audio to MIDI Clip").on_hover_text("Track the pitch of this clip into a new MIDI clip on a new instrument track").clicked() {
+            let _ = app.run("midi.from_audio", json!({"track": track.0, "start": start, "end": end}));
+        }
     }
 }
 

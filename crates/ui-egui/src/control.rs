@@ -98,7 +98,9 @@ fn handle(app: &mut SoundApp, ctx: &egui::Context, req: &ControlRequest) -> Opti
         "engine.execute" | "command" => {
             let id = p.get("command").or_else(|| p.get("id")).and_then(Value::as_str).unwrap_or("");
             let params = p.get("params").cloned().unwrap_or(json!({}));
-            match app.run(id, params) {
+            let result = app.run(id, params);
+            app.note_agent_command(id, result.is_ok(), ctx.input(|i| i.time));
+            match result {
                 Ok(v) => ok(v),
                 Err(e) => err(e),
             }

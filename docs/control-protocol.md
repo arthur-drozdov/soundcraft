@@ -39,11 +39,11 @@ Errors: `{"id": 1, "ok": false, "error": "bad parameters for `mix.volume`: no tr
 
 | Method | Params | What it does |
 |---|---|---|
-| `engine.execute` (alias `command`) | `{command, params}` | Run a command programmatically. **Never opens a dialog**; empty params use defaults or the current selection. |
+| `engine.execute` (alias `command`) | `{command, params}` | Run a command programmatically. **Never opens a dialog**; empty params use defaults or the current selection. The app shows the command's label in its status bar for a few seconds (see [Agent status line](#agent-status-line)). |
 | `engine.commands` | `{filter?}` | Every command: id, label, menu path, shortcut, params doc, enabled + reason. Includes UI-layer commands (`window.*`). |
 | `engine.parity` | `{}` | Parity report against the incumbent's menu catalog. |
 | `session.inspect` | `{detail?: "summary"|"full"}` | The document: tracks, clips (with times), inserts (+params when full), sends, routing, automation, markers, groups, busses, sources (`loaded` true when decoded audio is in the pool), selection, zoom (`samples_per_px`, `scroll`), transport, undo label. |
-| `ui.inspect` | `{}` | UI state (`window`, panels, dialogs), window size, playing/position, audio device, and `edit_layout` (timeline rect and every track row's rect, for clicking). |
+| `ui.inspect` | `{}` | UI state (`window`, panels, dialogs), window size, playing/position, audio device, `agent_status` (the last agent command shown in the status bar, or null), and `edit_layout` (timeline rect and every track row's rect, for clicking). |
 | `ui.set` | any `UiState` fields | e.g. `{"window": "Mix", "narrow_mix": true}`. |
 | `ui.menu.list` | `{}` | Every catalog menu path and the command that implements it (or null). |
 | `ui.menu.invoke` | `{path}` or `{id}` | Like clicking the menu item: may open its dialog (e.g. `"Track > New..."`). |
@@ -199,3 +199,79 @@ Errors: no `clip`/`track`; an unknown clip or track; a clip that is MIDI, video,
 ### `session.inspect` / `track.inspect`: plugin format
 
 Every insert in `inserts[]` also carries `format` (`builtin`, `clap`, `vst3` or `au`), and a track with an instrument carries `instrument_format` beside `instrument` (the plugin id), so an agent knows which slots to describe.
+
+### `midi.from_audio`
+
+`{track, start?, end?, to_track?, min_note_ms?: 60, quantize?: 0..1, grid?, key?}`: pitch-tracks audio into notes and writes them straight into a new MIDI clip, the way Edit > Copy Special > Audio as MIDI does onto the clipboard (it is the same tracker), but with the clip made for you and a confidence for every note. It follows one clear pitch at a time: a sung or played melody, a bass line, a lead. Chords, noise and drums give few or no notes. **One undo step** ("Audio to MIDI Clip") undoes everything it made, the track included; undoing and redoing it round-trips.
+
+- `track` is the audio track to read (id or name; the first selected track when omitted). Its clips are rendered as they play (clip gain, fades, offsets, clip effects; before the mixer) and the channels are mixed to mono.
+- `start`/`end` (samples, `{"seconds": x}` or a time string like `"bars_beats:5|1|000"`) pick the span. `end` is cut to the end of the track's audio, so it may be far past it. A missing `end` (or `start`) is taken from the track's audio; with neither, the edit selection is used when there is one, else all of the track's audio. At most 2 minutes per call (the tracker costs several seconds of CPU per minute of audio, on the control thread); longer is refused: split it.
+- `to_track` (id or name) is an existing MIDI or instrument track to put the clip on. Without it a new instrument track named `<source> MIDI` (default instrument, stereo) is created at the end of the track list. The clip is named `<source> MIDI`, starts at the start of the tracked span and is as long as it; it replaces whatever it covers on the target track, like `midi.new_clip` (`overwrote_clips` says how many clips it cut into). The edit selection and the playhead are left alone.
+- `min_note_ms` (default 60, 0..5000) drops notes shorter than that. The tracker itself ignores anything under about 35 ms.
+- `key` (`"F minor"`, `"Bb major"`, `"C#"`, `"Am"`, `"D dorian"`; also phrygian, lydian, mixolydian, locrian, harmonic minor, and major/minor pentatonic; a tonic with no scale means major) moves every note to the nearest pitch in the key (a tie goes down). Neighbouring notes that become the same pitch and touch are merged into one. This is the form `audio.analyze` reports its `key` in.
+- `quantize` (0..1, default 0: off) pulls note starts and ends that fraction of the way to the nearest line of the session grid (`view.grid`; `grid` overrides it for this call with the same values: `"1/16"`, `"1/8t"`, `{"seconds": 0.1}`). 1 snaps fully, 0.5 halfway. Notes stay monophonic: one that is squeezed to nothing lasts one grid step, and one with no room left (another note lands on its start) is dropped. Values outside 0..1 are clamped.
+- Order of work: track, snap to the key, merge, drop short notes, quantize.
+- Note times are in ticks (960 per quarter note) **from the start of the clip**, so they line up with `midi.notes`, `midi.note_edit` and the event commands. Velocity is from the loudest frame of the note (1..127). `confidence` is 0..1: how periodic the audio was over the note (a clean tone is near 1, a noisy or breathy one lower), reduced when the pitch sat between two semitones (50 cents off halves it); a merged note gets the length-weighted mean. Treat notes under about 0.5 as suspect and listen to them.
+
+Result:
+
+```json
+{
+  "track": 9, "clip": 41, "source_track": 3, "created_track": true,
+  "start": 0, "end": 384000, "count": 2, "detected": 3, "dropped_short": 1, "overwrote_clips": 0,
+  "notes_truncated": false,
+  "notes": [
+    {"index": 0, "pitch": 57, "name": "A2", "start_ticks": 0, "length_ticks": 768, "velocity": 96, "confidence": 0.983},
+    {"index": 1, "pitch": 64, "name": "E3", "start_ticks": 768, "length_ticks": 760, "velocity": 96, "confidence": 0.971}
+  ]
+}
+```
+
+- `track` and `clip` are where the notes went (`track` is the MIDI track; `source_track` the audio it came from); `created_track` says whether `track` is new. `start`/`end` are the samples the clip covers.
+- `notes` is sorted as in the clip, so `index` can go straight into `midi.note_edit {clip, index, ...}` / `midi.note_delete`; `name` uses the Pro Tools octave convention (middle C = `C3`). At most 2000 are listed (`notes_truncated`); `count` is the real number. `detected` is how many the tracker found before `key`, `min_note_ms` and `quantize` changed them, `dropped_short` how many `min_note_ms` removed.
+
+Errors (the session is left exactly as it was): an unknown or non-audio source track; a track without audio; an unknown `to_track`, or one that is not a MIDI or instrument track; `end` not after `start`, or no audio in the range; a span over 2 minutes; audio that is not loaded in memory; a `quantize` or `min_note_ms` that is not a number, an unknown `key` or `grid`; and no notes found (silence, noise, chords, or every note shorter than `min_note_ms`).
+
+```json
+{"command": "midi.from_audio", "params": {"track": "Vox Ref", "start": {"seconds": 4}, "end": {"seconds": 20}, "to_track": "Lead", "key": "F minor", "quantize": 0.5}}
+{"command": "midi.from_audio", "params": {"track": "Hum"}}
+```
+
+### `view.reveal`
+
+`{start, end?, track?, width_px?: 1200, margin?: 0.1}`: zoom and scroll the Edit window to a region, so a person watching sees what the agent is about to change. A view command: it changes only the saved zoom and scroll, and leaves no undo step and no journal entry. `start`/`end` are positions as elsewhere; the region is zoomed to fill the timeline with `margin` (a fraction of its length, 0..0.45) free on each side, and centred. A region under 0.1 s is shown as if it were 0.1 s long, so a click-sized region is never zoomed to the sample level. Without `end`, only the scroll changes (the position is centred at the current zoom). A region before 0 is shown from 0.
+
+- `width_px` is the width of the timeline in points; the app fills it in from the timeline as drawn (pass it only when you know better, or when headless, where 1200 is assumed).
+- `track` (id or name) is checked, returned, and, in the app, **scrolled into view vertically too**: its row is centred when it was off screen and left where it is when already visible. The engine alone knows only the horizontal view (the vertical scroll is not part of the session), so headless runs do the horizontal reveal only. Hidden tracks are not scrolled to. The Edit window scrolls even while the Mix window is showing; it is not brought to the front.
+
+Result: `{samples_per_px, scroll, start, end, track}` (`track` is the id or `null`; `end` equals `start` when none was given).
+
+Errors: no `start`, an unparseable position, `end` before `start`, an unknown `track`. The view is untouched then.
+
+```json
+{"command": "view.reveal", "params": {"track": "Drums", "start": "bars_beats:5|1|000", "end": "bars_beats:13|1|000"}}
+```
+
+### `session.checkpoint` and `session.checkpoints`
+
+`session.checkpoint {label?}` saves a restore point: a copy of the session (as `session.save_copy` would write it, with the audio it needs) to `Checkpoints/<YYYYMMDD-HHMMSS>-<label>.scraft` in the folder of the session file. The open session is untouched: it keeps its path, its unsaved flag and its undo history, and the checkpoint does **not** include a later edit. The time is UTC. Each checkpoint is later than every one before it, even within a second or after the clock was set back (the stamp is moved on by a second when it would not be), so names sort in creation order.
+
+- `label` is optional text. In the file name it is reduced to lower-case letters and digits with single dashes between runs of anything else, at most 40 characters (`"Before the chorus!"` becomes `before-the-chorus`, `"../../x"` becomes `x`); with nothing usable it is `checkpoint`. Nothing a label contains can leave the `Checkpoints` folder.
+- The session must have been saved (`session.save`/`save_as`, or opened from a file): the folder is beside its file, and the command is disabled otherwise. In the browser build it is refused (there are no folders).
+- Audio goes to `Checkpoints/Audio Files/` and is shared: a file there with exactly the same bytes is reused, so only audio that is new since the last checkpoint is written. Audio is stored as 32-bit float WAV like any saved session, so the first checkpoint of a session with a lot of compressed or 16-bit audio is larger than the originals.
+- Writing obeys the automation write root (`--automation-write-root`): a session outside it cannot be checkpointed.
+
+Result: `{path, label, created, audio_files_written}`: `path` is the absolute path of the new file, `label` the slug as it appears in the name, `created` the time as `2026-10-22T09:15:03Z`. Open it with `session.open {path}`; open it as a session of its own (its name is its file stem) and the original is not changed.
+
+`session.checkpoints {}` (a query) lists the checkpoints in that folder, **newest first**: `[{path, label, created}]`, each as above (`label` is the slug from the file name). Only files named like a checkpoint are listed; others in the folder (and folders) are ignored. A session that was never saved, or has no `Checkpoints` folder, gives `[]`. Reading obeys the automation read root.
+
+Errors: `session.checkpoint` on a session that was never saved; a `label` that is not text; a path outside the automation write root; a folder or file that cannot be written; too many checkpoints with one label in the same second (1000). `session.checkpoints`: a folder outside the read root, or one that cannot be read.
+
+```json
+{"command": "session.checkpoint", "params": {"label": "before-chorus-layer"}}
+{"command": "session.checkpoints", "params": {}}
+```
+
+### Agent status line
+
+Commands that arrive over the control channel (`engine.execute`, or its alias `command`) are announced in the Edit window's status bar as `Agent: <label>` (the command's label, such as `Agent: Audio to MIDI Clip`, with `(failed)` after it when the command was refused or failed), in the accent colour between the session summary and the undo label, for 10 seconds or until the next one. Queries (`session.inspect`, `audio.analyze`, `plugin.describe` and the like) are not announced, so an agent that polls does not keep the line lit, and neither are commands a person runs with the mouse and keyboard, UI-layer commands (`window.*`, `ui.*`) or unknown ids. The line is left out when the bar is too narrow for it. `ui.inspect` reports it as `agent_status`: `null`, or `{text, command, label, failed, age_s}`.

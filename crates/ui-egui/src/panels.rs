@@ -431,6 +431,16 @@ pub(crate) fn memory_locations(app: &mut SoundApp, ui: &mut Ui) {
 pub(crate) fn undo_history(app: &mut SoundApp, ui: &mut Ui) {
     let hist = app.engine.undo_history();
     let n = hist.len();
+    // A restore point beside the session file; needs a saved session to sit beside.
+    let saved = app.engine.path.is_some();
+    let button = ui.add_enabled(saved, egui::Button::new("Save Checkpoint")).on_hover_text("Copy the session to its Checkpoints folder");
+    let button = if saved { button } else { button.on_disabled_hover_text("Save the session first: checkpoints are kept beside the session file") };
+    if button.clicked()
+        && let Ok(v) = app.run("session.checkpoint", json!({}))
+    {
+        let name = v["path"].as_str().and_then(|p| std::path::Path::new(p).file_name()).and_then(|n| n.to_str()).unwrap_or_default();
+        app.ui.status = format!("Checkpoint saved: {name}");
+    }
     egui::ScrollArea::vertical().show(ui, |ui| {
         for (i, h) in hist.iter().enumerate() {
             if ui.selectable_label(i + 1 == n, format!("{}  {h}", i + 1)).clicked() {

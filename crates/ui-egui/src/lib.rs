@@ -245,6 +245,35 @@ pub enum Gesture {
     ZoomBox { start: f32 },
 }
 
+/// The last command an agent ran through the control channel, for the Edit window's status bar
+/// (`Agent: <label>`), so a person watching can tell what the agent just did.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AgentStatus {
+    /// The command's id.
+    pub command: String,
+    /// The command's label, without a trailing ellipsis.
+    pub label: String,
+    /// The command was refused or failed.
+    pub failed: bool,
+    /// UI time (egui seconds) when it ran.
+    pub at: f64,
+}
+
+impl AgentStatus {
+    /// How long the status bar shows it, in seconds.
+    pub const SHOW_SECS: f64 = 10.0;
+
+    /// `Agent: Move Clip`, or `Agent: Move Clip (failed)`.
+    pub fn text(&self) -> String {
+        if self.failed { format!("Agent: {} (failed)", self.label) } else { format!("Agent: {}", self.label) }
+    }
+
+    /// Seconds left to show it at UI time `now` (zero or less once it has expired).
+    pub fn remaining(&self, now: f64) -> f64 {
+        Self::SHOW_SECS - (now - self.at).max(0.0)
+    }
+}
+
 pub struct SoundApp {
     pub engine: Engine,
     /// The session path as of the last frame, and whether the recent list changed since the host
@@ -316,6 +345,8 @@ pub struct SoundApp {
     /// When Record last found nothing to record on, and why: the Record buttons show it for a moment.
     record_hint: Option<(f64, &'static str)>,
     pub quit_requested: bool,
+    /// The last command an agent ran over the control channel; cleared once it has been shown.
+    pub agent_status: Option<AgentStatus>,
     /// Reset floating-window positions next frame (Window › Arrange).
     pub arrange_request: bool,
     /// Tracks whose automation was touched during this pass (Touch/Latch writing).
@@ -396,6 +427,7 @@ impl SoundApp {
             sim: None,
             record_hint: None,
             quit_requested: false,
+            agent_status: None,
             arrange_request: false,
             touched: std::collections::HashSet::new(),
             last_write_at: i64::MIN,
@@ -415,12 +447,21 @@ impl SoundApp {
     }
 
     /// Run a command; errors go to the status line. Returns the result.
-    pub fn run(&mut self, id: &str, params: Value) -> Result<Value, String> {
+    pub fn run(&mut self, id: &str, mut params: Value) -> Result<Value, String> {
         if matches!(id, "session.new" | "session.open" | "session.close" | "session.revert") && bounce::refuses_session_switch(self) {
             return Err(self.ui.status.clone());
         }
         if let Some(r) = menus::run_ui_command(self, id, &params) {
             return r;
+        }
+        if id == "view.reveal" {
+            // Fit the region to the timeline as drawn, unless the caller said how wide it is.
+            let [x0, _, x1, _] = self.edit_layout.timeline;
+            if let Some(m) = params.as_object_mut()
+                && x1 - x0 >= 100.0
+            {
+                m.entry("width_px").or_insert(json!(x1 - x0));
+            }
         }
         if id.starts_with("session.save") || id.starts_with("file.bounce") {
             // Third-party plugins keep state the session can't see: store it first.
@@ -439,6 +480,10 @@ impl SoundApp {
                     // Re-selecting a scrolling mode resumes the playhead follow.
                     self.edit_layout.follow_hold = false;
                 }
+                if id == "view.reveal" {
+                    // The engine only knows the horizontal view; the track's row is scrolled to here.
+                    self.edit_layout.reveal_track = v.get("track").and_then(Value::as_u64);
+                }
                 if id == "track.clear_clip_indicators" {
                     self.meters.values_mut().chain([&mut self.main_meter]).for_each(|m| m.clip = false);
                 }
@@ -450,6 +495,19 @@ impl SoundApp {
                 Err(e.to_string())
             }
         }
+    }
+
+    /// Remember a command that came in over the control channel, for the status bar. Reads
+    /// (queries) are not announced: an agent that polls would keep the line lit. UI-only commands
+    /// have no engine spec and are not announced either.
+    pub fn note_agent_command(&mut self, id: &str, ok: bool, now: f64) {
+        let Some(spec) = soundcraft_engine::cmd::find_command(id) else { return };
+        if !(spec.journal || spec.view) {
+            return;
+        }
+        let label = spec.label.trim_end_matches(['.', '…']).trim();
+        let label = if label.is_empty() { id } else { label };
+        self.agent_status = Some(AgentStatus { command: id.to_string(), label: label.to_string(), failed: !ok, at: now });
     }
 
     pub fn is_playing(&self) -> bool {
@@ -1286,6 +1344,9 @@ impl SoundApp {
             "frame_ms": self.frame_ms,
             "audio_device": self.player.as_ref().map(|p| p.device_name.clone()),
             "status": self.ui.status,
+            "agent_status": self.agent_status.as_ref().map(|a| {
+                json!({"text": a.text(), "command": a.command, "label": a.label, "failed": a.failed, "age_s": (ctx.input(|i| i.time) - a.at).max(0.0)})
+            }),
         })
     }
 }

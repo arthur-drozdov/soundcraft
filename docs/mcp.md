@@ -100,6 +100,8 @@ files it was given rather than guarding against other software on the computer.
 
 Agent Studio queries such as `plugin.describe` (a plugin's identity, parameters with ranges, units and current value text, state size, editor), `plugin.param_text` (a plugin's own text for chosen parameter values) and `audio.analyze` (peak, RMS, LUFS, onsets, BPM, key, centroid, clipping and DC of a clip or a track range, up to 10 minutes) have no tools of their own: run them with `execute`, or list them with `list_commands`. They are read-only and leave no undo step. See [control-protocol.md](control-protocol.md#agent-studio-commands).
 
+The other Agent Studio commands are reached the same way, with `execute` (or inside a `batch`): `midi.from_audio` (pitch-track audio into a new MIDI clip with per-note confidence, optional key snap and quantize; one undo step), `view.reveal` (zoom and scroll the Edit window to a region and track; a view setting, no undo step), `session.checkpoint {label?}` (a restore copy in `Checkpoints/` beside the session file, which must have been saved) and `session.checkpoints` (the list, newest first, a query). Checkpoints obey `--automation-write-root` / `--automation-read-root` like every other file the agent writes or reads. With `--connect`, the app also shows the label of each state-changing command in its status bar as `Agent: <label>`.
+
 Resources: `soundcraft://session` (full session JSON), `soundcraft://commands`.
 
 ## Conventions

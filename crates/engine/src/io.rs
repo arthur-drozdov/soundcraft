@@ -925,6 +925,54 @@ pub fn save_session_copy(e: &Engine, path: &str) -> Result<usize> {
     write_session(e.session(), path, false).map(|(_, n, _)| n)
 }
 
+/// The folder session checkpoints are kept in: `Checkpoints/` beside the session file.
+pub fn checkpoint_dir(session_file: &Path) -> PathBuf {
+    session_file.parent().unwrap_or(Path::new("")).join("Checkpoints")
+}
+
+/// Write the open session (and the audio it needs) to `file`, creating its folder, without
+/// touching the open document: a checkpoint. Returns how many audio files were written. The caller
+/// picks a name that is not taken; confinement to the automation write root is checked here.
+pub fn save_checkpoint(e: &Engine, file: &Path) -> Result<usize> {
+    if cfg!(target_arch = "wasm32") {
+        return Err(EngineError::Io("checkpoints are not available in the browser".into()));
+    }
+    if let Some(dir) = file.parent() {
+        make_dir(dir)?;
+    }
+    save_session_copy(e, &file.to_string_lossy())
+}
+
+/// Is there anything at `path`, for a path the automation write root lets us create? One outside
+/// the root reads as absent, so this cannot be used to look for files beyond it.
+pub fn exists_for_write(path: &Path) -> bool {
+    crate::file_access::check_write(path).is_ok() && std::fs::symlink_metadata(path).is_ok()
+}
+
+/// The names of the session files (`*.scraft`, regular files) in `dir`, sorted; none when the folder
+/// does not exist. Inside the automation read root when there is one.
+pub fn list_session_files(dir: &Path) -> Result<Vec<String>> {
+    if cfg!(target_arch = "wasm32") {
+        return Err(EngineError::Io("checkpoints are not available in the browser".into()));
+    }
+    crate::file_access::check_read(dir).map_err(EngineError::Io)?;
+    let entries = match std::fs::read_dir(dir) {
+        Ok(entries) => entries,
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(err) => return Err(EngineError::Io(format!("{}: {err}", dir.display()))),
+    };
+    let ext = format!(".{}", soundcraft_model::SESSION_EXTENSION);
+    let mut names: Vec<String> = entries
+        .flatten()
+        .take(100_000)
+        .filter(|f| f.file_type().is_ok_and(|t| t.is_file()))
+        .filter_map(|f| f.file_name().into_string().ok())
+        .filter(|n| n.ends_with(&ext))
+        .collect();
+    names.sort();
+    Ok(names)
+}
+
 /// Write `session` to `path`; returns the session with updated media paths, the number of audio
 /// files written and the final path.
 fn write_session(session: &Session, path: &str, overwrite: bool) -> Result<(Session, usize, PathBuf)> {

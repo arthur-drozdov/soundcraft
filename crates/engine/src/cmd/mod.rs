@@ -9,6 +9,7 @@ use std::sync::OnceLock;
 mod audio_analyze;
 mod audio_midi;
 mod audiosuite;
+mod checkpoint;
 mod clap;
 mod clip;
 mod clip_list;
@@ -21,12 +22,14 @@ mod file;
 mod health;
 mod instrument;
 mod midi;
+mod midi_from_audio;
 mod mix;
 mod more_util;
 mod options;
 mod plugin_describe;
 mod plugin_state;
 mod query;
+mod reveal;
 pub(crate) mod sampler;
 mod setup_more;
 mod surround;
@@ -125,6 +128,7 @@ pub fn command_specs() -> &'static [CommandSpec] {
         v.extend(audio_midi::specs());
         v.extend(audio_analyze::specs());
         v.extend(midi::specs());
+        v.extend(midi_from_audio::specs());
         v.extend(view_more::specs());
         v.extend(track_more::specs());
         v.extend(clip_more::specs());
@@ -140,6 +144,8 @@ pub fn command_specs() -> &'static [CommandSpec] {
         v.extend(sampler::specs());
         v.extend(video::specs());
         v.extend(zoom_toggle::specs());
+        v.extend(reveal::specs());
+        v.extend(checkpoint::specs());
         v
     })
 }

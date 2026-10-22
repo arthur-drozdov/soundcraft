@@ -4,13 +4,30 @@
 use super::*;
 use crate::{Clipboard, cmd};
 use serde_json::json;
+use soundcraft_dsp::pitch_detect::DetectedNote;
 use soundcraft_midi::{Note, Sequence};
-use soundcraft_model::{Clip, ClipId};
+use soundcraft_model::{Clip, ClipId, Session};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(noundo "edit.copy_audio_as_midi", "Audio as MIDI", ["Edit", "Copy Special"], None, "{track?, start?, end?} — monophonic pitch tracking of the selected audio", has_range, audio_as_midi),
     ]
+}
+
+/// Most audio one call tracks, in seconds. The tracker is YIN on overlapping frames, which costs
+/// several seconds of CPU per minute of audio, and the control thread (the UI thread in the app)
+/// waits for it. Longer ranges are refused rather than left to stall it.
+pub(crate) const MAX_SECS: f64 = 120.0;
+
+/// Render the clips of `t` over `r` (before the mixer), mix the channels to mono and run the
+/// monophonic pitch tracker over it. Note positions are samples **relative to `r.start`**. The
+/// caller bounds `r` (see [`crate::io::bounded_to_track`]); an empty or silent range gives no notes.
+pub(crate) fn detect_range(s: &Session, t: TrackId, r: Range) -> Vec<DetectedNote> {
+    let audio = soundcraft_mix::render_clips(s, t, r);
+    let n = audio.first().map_or(0, Vec::len);
+    let k = audio.len().max(1) as f32;
+    let mono: Vec<f32> = (0..n).map(|i| audio.iter().map(|c| c.get(i).copied().unwrap_or(0.0)).sum::<f32>() / k).collect();
+    soundcraft_dsp::pitch_detect::audio_to_notes(&mono, s.sample_rate.as_f64() as f32)
 }
 
 fn audio_as_midi(e: &mut Engine, p: &Value) -> Result<Value> {
@@ -25,11 +42,10 @@ fn audio_as_midi(e: &mut Engine, p: &Value) -> Result<Value> {
         return Err(bad(id, "select audio on an audio track"));
     }
     let r = crate::io::bounded_to_track(s, t, r);
-    let audio = soundcraft_mix::render_clips(s, t, r);
-    let n = audio.first().map_or(0, Vec::len);
-    let k = audio.len().max(1) as f32;
-    let mono: Vec<f32> = (0..n).map(|i| audio.iter().map(|c| c.get(i).copied().unwrap_or(0.0)).sum::<f32>() / k).collect();
-    let detected = soundcraft_dsp::pitch_detect::audio_to_notes(&mono, s.sample_rate.as_f64() as f32);
+    if r.len() as f64 > MAX_SECS * s.sample_rate.as_f64() {
+        return Err(bad(id, format!("{:.0} s is too long to track (limit {MAX_SECS:.0} s); select less", r.len() as f64 / s.sample_rate.as_f64())));
+    }
+    let detected = detect_range(s, t, r);
     let base = s.tempo.samples_to_ticks(r.start, s.sample_rate);
     let mut seq = Sequence::default();
     for d in &detected {

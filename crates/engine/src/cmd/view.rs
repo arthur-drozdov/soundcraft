@@ -93,8 +93,8 @@ pub fn specs() -> Vec<CommandSpec> {
     ]
 }
 
-const MIN_SPP: f64 = 0.25;
-const MAX_SPP: f64 = 1_000_000.0;
+pub(super) const MIN_SPP: f64 = 0.25;
+pub(super) const MAX_SPP: f64 = 1_000_000.0;
 
 fn zoom(e: &mut Engine, f: f64, x: Option<f64>) -> Result<Value> {
     let insertion = e.session().edit.selection.start as f64;
