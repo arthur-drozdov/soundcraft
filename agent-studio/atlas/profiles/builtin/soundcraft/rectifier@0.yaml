@@ -1,0 +1,273 @@
+identity:
+  name: Rectifier
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: rectifier
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: Half- or full-wave rectifier for octave-up and distorted harmonic content, with DC removal, dry/wet
+  mix and output trim.
+signal_flow: 'Input -> rectify (Half Wave: max(x, 0); Full Wave: |x|) -> DC blocker (10 Hz) -> dry/wet
+  mix -> output gain.'
+modes:
+  - name: Half Wave
+    description: Keeps only the positive half-cycles (max(x, 0)); the fundamental stays and many harmonics
+      are added.
+  - name: Full Wave
+    description: Takes the absolute value; doubles the apparent frequency (octave up) and removes the
+      fundamental for pure sources.
+params:
+  - id: mode
+    host_name: Mode
+    name: Mode
+    section: Rectifier
+    role: rectification type
+    unit: choice
+    min: 0.0
+    max: 1.0
+    default: 1.0
+    taper: linear
+    choices:
+      - Half Wave
+      - Full Wave
+    does: Selects Half Wave (0) or Full Wave (1, default).
+    musical_use: Full Wave for octave-up effects on monophonic sources.
+    interactions:
+      - Switching mode changes the signal abruptly; set it rather than ramp it.
+    safe_range:
+      - 0
+      - 1
+    automatable: false
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:231
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:231
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:231
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:231
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      choices:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:231
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:231
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:231
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:231
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:231
+        confidence: 0.92
+  - id: mix
+    host_name: Mix
+    name: Mix
+    section: Output
+    role: dry/wet blend
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 100.0
+    taper: linear
+    does: Linear dry/wet blend.
+    musical_use: 20-50% blends the octave harmonic under the original.
+    interactions:
+      - At 100% a pure tone loses its fundamental in Full Wave mode.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:232
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:232
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:232
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:232
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:232
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:232
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:232
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:232
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:232
+        confidence: 0.92
+  - id: output
+    host_name: Output
+    name: Output
+    section: Output
+    role: output trim
+    unit: dB
+    min: -24.0
+    max: 12.0
+    default: 0.0
+    taper: linear
+    does: Gain after mixing, -24 to +12 dB.
+    musical_use: Compensate for level change.
+    interactions:
+      - Applies to both dry and wet.
+    safe_range:
+      - -12.0
+      - 6.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:233
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:233
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:233
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:233
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:233
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:233
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:233
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:233
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:233
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/harmonic.rs:236
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/harmonic.rs:292
+    confidence: 0.95
+  modes:
+    source: source
+    ref: crates/dsp/src/plugins/harmonic.rs:292
+    confidence: 0.93
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

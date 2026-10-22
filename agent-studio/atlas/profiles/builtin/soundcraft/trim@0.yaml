@@ -1,0 +1,184 @@
+identity:
+  name: Trim
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: trim
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: Gain trim from -inf to +12 dB with a polarity (phase invert) switch, smoothed over 10 ms.
+signal_flow: Input x (+1 or -1) x linear gain (smoothed) -> output.
+params:
+  - id: gain
+    host_name: Trim
+    name: Trim
+    section: Level
+    role: trim gain
+    unit: dB
+    min: -96.0
+    max: 12.0
+    default: 0.0
+    taper: linear
+    does: Gain in dB, -96 (= -inf) to +12.
+    musical_use: Set levels into other processors.
+    interactions:
+      - -96 dB mutes the signal.
+    safe_range:
+      - -24.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.92
+  - id: invert
+    host_name: Phase Invert
+    name: Phase Invert
+    section: Polarity
+    role: polarity switch
+    unit: bool
+    min: 0.0
+    max: 1.0
+    default: 0.0
+    taper: linear
+    does: Inverts the signal's polarity.
+    musical_use: Fix phase between two mics on the same source (e.g. snare top/bottom).
+    interactions:
+      - Polarity change is smoothed with the gain over 10 ms.
+    safe_range:
+      - 0
+      - 1
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:202
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:250
+    confidence: 0.95
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

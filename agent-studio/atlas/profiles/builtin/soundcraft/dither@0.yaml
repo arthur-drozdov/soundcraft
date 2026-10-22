@@ -1,0 +1,204 @@
+identity:
+  name: Dither
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: dither
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: TPDF dither with requantisation to 16, 20 or 24 bits and optional first-order noise shaping.
+  Digital silence stays silent.
+signal_flow: 'Input -> (optional error feedback: x - previous error) -> add triangular (TPDF) dither of
+  +-1 LSB -> round to the 2^(1 - bits) grid -> clamp to the legal range. Exact zeros bypass quantisation.'
+modes:
+  - name: Flat TPDF
+    description: 'Noise Shaping off: plain triangular dither.'
+  - name: Noise-shaped
+    description: 'Noise Shaping on: first-order error feedback pushes quantisation noise toward higher
+      frequencies.'
+params:
+  - id: bits
+    host_name: Bit Depth
+    name: Bit Depth
+    section: Requantise
+    role: target word length
+    unit: choice
+    min: 0.0
+    max: 2.0
+    default: 0.0
+    taper: linear
+    choices:
+      - '16'
+      - '20'
+      - '24'
+    does: 'Target bit depth: 16, 20 or 24 (choice index 0..2).'
+    musical_use: 16 for CD-format masters; leave the plugin last in the chain.
+    interactions:
+      - Should be the last processor; any later gain change defeats the dithering.
+      - Selecting 24 gives noise far below audibility.
+    safe_range:
+      - 0
+      - 2
+    automatable: false
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      choices:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.92
+  - id: noise_shaping
+    host_name: Noise Shaping
+    name: Noise Shaping
+    section: Requantise
+    role: noise-shaping enable
+    unit: bool
+    min: 0.0
+    max: 1.0
+    default: 0.0
+    taper: linear
+    does: Enables first-order error-feedback noise shaping.
+    musical_use: Slightly reduces audible noise in the midrange for 16-bit output.
+    interactions:
+      - Raises noise at high frequencies.
+    safe_range:
+      - 0
+      - 1
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:448
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:491
+    confidence: 0.95
+  modes:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:491
+    confidence: 0.93
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

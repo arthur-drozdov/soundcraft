@@ -1,0 +1,468 @@
+identity:
+  name: Chorus
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: chorus
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: 'Stereo chorus: a short delay line (5-30 ms base) swept by a sine LFO by up to 6 ms, mixed with
+  the dry signal; optional feedback and stereo phase spread.'
+signal_flow: Input -> short delay line read at Delay + Depth x 6 ms x (0.5 + 0.5 sin) (cubic interpolation)
+  -> mixed with dry (Mix). Feedback re-injects the delayed signal. The right channel's LFO is offset by
+  up to a quarter cycle (Spread).
+params:
+  - id: rate
+    host_name: Rate
+    name: Rate
+    section: Modulation
+    role: LFO rate
+    unit: Hz
+    min: 0.05
+    max: 5.0
+    default: 0.8
+    taper: log
+    does: LFO speed, 0.05-5 Hz (log).
+    musical_use: 0.3-1.2 Hz for lush chorus.
+    interactions:
+      - Faster rates with high depth sound like vibrato.
+    safe_range:
+      - 0.1
+      - 3.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.92
+  - id: depth
+    host_name: Depth
+    name: Depth
+    section: Modulation
+    role: sweep depth
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 50.0
+    taper: linear
+    does: Sweep amount; 100% moves the delay by 6 ms.
+    musical_use: 30-60% for classic chorus.
+    interactions:
+      - Mix at 100% gives pure vibrato-like pitch modulation.
+    safe_range:
+      - 0.0
+      - 80.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.92
+  - id: delay
+    host_name: Delay
+    name: Delay
+    section: Delay
+    role: base delay
+    unit: ms
+    min: 5.0
+    max: 30.0
+    default: 12.0
+    taper: linear
+    does: Base delay time, 5-30 ms.
+    musical_use: 10-15 ms for chorus; longer starts to sound like a doubler.
+    interactions:
+      - Sweep is added on top of this base.
+    safe_range:
+      - 5.0
+      - 30.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.92
+  - id: feedback
+    host_name: Feedback
+    name: Feedback
+    section: Delay
+    role: regeneration
+    unit: percent
+    min: 0.0
+    max: 90.0
+    default: 0.0
+    taper: linear
+    does: Amount of the delayed signal fed back, 0-90%.
+    musical_use: Keep low (0-20%) for chorus; higher gives resonant, flanger-like colour.
+    interactions:
+      - Higher feedback makes comb filtering more pronounced.
+    safe_range:
+      - 0.0
+      - 50.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.92
+  - id: mix
+    host_name: Mix
+    name: Mix
+    section: Output
+    role: dry/wet blend
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 50.0
+    taper: linear
+    does: Linear dry/wet blend.
+    musical_use: 40-50% typical.
+    interactions:
+      - 0% bypasses the effect audibly (latency-free).
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.92
+  - id: spread
+    host_name: Spread
+    name: Spread
+    section: Stereo
+    role: stereo LFO offset
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 100.0
+    taper: linear
+    does: Phase offset of the right channel's LFO (up to a quarter cycle at 100%).
+    musical_use: 100% for wide stereo; 0% for a mono-safe chorus.
+    interactions:
+      - Only matters on stereo material.
+      - 0% makes both channels move together.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/modulation.rs:160
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/modulation.rs:288
+    confidence: 0.95
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

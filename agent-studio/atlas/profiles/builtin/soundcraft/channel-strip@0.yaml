@@ -1,0 +1,1592 @@
+identity:
+  name: Channel Strip
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: channel_strip
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: Channel strip combining input trim, expander/gate, compressor and a 7-band-EQ-derived section
+  (HPF, low shelf, one mid bell, high shelf) with output trim, each stage switchable.
+signal_flow: Input gain -> Gate (if Gate on) -> Compressor (if Comp on) -> EQ (if EQ on; HPF, low shelf,
+  mid bell with Q, high shelf) -> output gain. The gate and compressor reuse the Expander/Gate and Compressor/Limiter
+  engines (gate ratio 100:1, attack 0.5 ms, hold 50 ms; compressor knee 6 dB, no sidechain HPF or lookahead).
+  The gain reduction meter shows gate plus compressor reduction.
+params:
+  - id: input_gain
+    host_name: Input
+    name: Input
+    section: Gain
+    role: input trim
+    unit: dB
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: Gain applied before all processing, -24 to +24 dB.
+    musical_use: Set the level hitting the gate and compressor thresholds.
+    interactions:
+      - Raising it increases gate opening and compression amounts as the detectors see a hotter signal.
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:10
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:10
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:10
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:10
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:10
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:10
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:10
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:10
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:10
+        confidence: 0.92
+  - id: gate_on
+    host_name: Gate
+    name: Gate On
+    section: Gate
+    role: gate enable
+    unit: bool
+    min: 0.0
+    max: 1.0
+    default: 0.0
+    taper: linear
+    does: Switches the expander/gate stage in or out of the chain.
+    musical_use: Use on noisy sources or drum mics.
+    interactions:
+      - Gate Threshold, Range and Release only matter while on.
+    safe_range:
+      - 0
+      - 1
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:11
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:11
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:11
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:11
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:11
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:11
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:11
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:11
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:11
+        confidence: 0.92
+  - id: gate_threshold
+    host_name: Gate Thresh
+    name: Gate Threshold
+    section: Gate
+    role: gate threshold
+    unit: dB
+    min: -80.0
+    max: 0.0
+    default: -50.0
+    taper: linear
+    does: Level below which the gate closes, -80 to 0 dB.
+    musical_use: Just above the noise floor.
+    interactions:
+      - Only active when Gate On.
+      - Measured after Input gain.
+    safe_range:
+      - -70.0
+      - -20.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:12
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:12
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:12
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:12
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:12
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:12
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:12
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:12
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:12
+        confidence: 0.92
+  - id: gate_range
+    host_name: Gate Range
+    name: Gate Range
+    section: Gate
+    role: gate attenuation depth
+    unit: dB
+    min: 0.0
+    max: 80.0
+    default: 40.0
+    taper: linear
+    does: Maximum attenuation when the gate is closed, 0-80 dB.
+    musical_use: 10-20 dB for natural noise reduction, higher for a full mute.
+    interactions:
+      - Only active when Gate On.
+    safe_range:
+      - 0.0
+      - 80.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:13
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:13
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:13
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:13
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:13
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:13
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:13
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:13
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:13
+        confidence: 0.92
+  - id: gate_release
+    host_name: Gate Release
+    name: Gate Release
+    section: Gate
+    role: gate closing time
+    unit: ms
+    min: 1.0
+    max: 4000.0
+    default: 150.0
+    taper: log
+    does: Time constant for the gate to close, 1 ms to 4 s.
+    musical_use: Match the sound's decay.
+    interactions:
+      - Only active when Gate On.
+      - Gate hold (50 ms) and attack (0.5 ms) are fixed in the strip.
+    safe_range:
+      - 20.0
+      - 1000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:14
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:14
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:14
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:14
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:14
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:14
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:14
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:14
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:14
+        confidence: 0.92
+  - id: comp_on
+    host_name: Comp
+    name: Comp On
+    section: Compressor
+    role: compressor enable
+    unit: bool
+    min: 0.0
+    max: 1.0
+    default: 0.0
+    taper: linear
+    does: Switches the compressor stage in or out of the chain.
+    musical_use: Use for level control of vocals, bass, drums.
+    interactions:
+      - Comp parameters only matter while on.
+    safe_range:
+      - 0
+      - 1
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:15
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:15
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:15
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:15
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:15
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:15
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:15
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:15
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:15
+        confidence: 0.92
+  - id: comp_threshold
+    host_name: Comp Thresh
+    name: Comp Threshold
+    section: Compressor
+    role: compression threshold
+    unit: dB
+    min: -60.0
+    max: 0.0
+    default: -18.0
+    taper: linear
+    does: Level above which compression starts, -60 to 0 dB.
+    musical_use: Aim for 3-6 dB of gain reduction on peaks.
+    interactions:
+      - Only active when Comp On.
+      - Interacts with Input gain and Comp Ratio.
+    safe_range:
+      - -40.0
+      - -6.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:16
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:16
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:16
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:16
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:16
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:16
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:16
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:16
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:16
+        confidence: 0.92
+  - id: comp_ratio
+    host_name: Comp Ratio
+    name: Comp Ratio
+    section: Compressor
+    role: compression ratio
+    unit: ratio
+    min: 1.0
+    max: 100.0
+    default: 3.0
+    taper: log
+    does: Compression ratio, 1:1 to 100:1 (log).
+    musical_use: 2:1-4:1 for control, higher for limiting.
+    interactions:
+      - Only active when Comp On.
+    safe_range:
+      - 1.5
+      - 10.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:17
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:17
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:17
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:17
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:17
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:17
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:17
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:17
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:17
+        confidence: 0.92
+  - id: comp_attack
+    host_name: Comp Attack
+    name: Comp Attack
+    section: Compressor
+    role: compressor attack time
+    unit: ms
+    min: 0.01
+    max: 300.0
+    default: 10.0
+    taper: log
+    does: One-pole attack time constant, 0.01-300 ms.
+    musical_use: Slower preserves transients.
+    interactions:
+      - Only active when Comp On.
+    safe_range:
+      - 0.1
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:18
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:18
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:18
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:18
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:18
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:18
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:18
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:18
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:18
+        confidence: 0.92
+  - id: comp_release
+    host_name: Comp Release
+    name: Comp Release
+    section: Compressor
+    role: compressor release time
+    unit: ms
+    min: 5.0
+    max: 3000.0
+    default: 120.0
+    taper: log
+    does: One-pole release time constant, 5 ms to 3 s.
+    musical_use: Tune to the tempo of the material.
+    interactions:
+      - Only active when Comp On.
+    safe_range:
+      - 20.0
+      - 1000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:19
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:19
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:19
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:19
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:19
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:19
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:19
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:19
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:19
+        confidence: 0.92
+  - id: comp_makeup
+    host_name: Comp Makeup
+    name: Comp Makeup
+    section: Compressor
+    role: compressor makeup gain
+    unit: dB
+    min: 0.0
+    max: 40.0
+    default: 0.0
+    taper: linear
+    does: Fixed gain after the compressor, 0-40 dB.
+    musical_use: Recover the level lost to compression.
+    interactions:
+      - Only applied when Comp On.
+    safe_range:
+      - 0.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:20
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:20
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:20
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:20
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:20
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:20
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:20
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:20
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:20
+        confidence: 0.92
+  - id: eq_on
+    host_name: EQ
+    name: EQ On
+    section: EQ
+    role: EQ enable (default on)
+    unit: bool
+    min: 0.0
+    max: 1.0
+    default: 1.0
+    taper: linear
+    does: Switches the whole EQ section in or out; on by default.
+    musical_use: Bypass to A/B the EQ.
+    interactions:
+      - HPF, shelves and mid bell parameters only matter while on.
+    safe_range:
+      - 0
+      - 1
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:21
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:21
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:21
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:21
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:21
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:21
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:21
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:21
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:21
+        confidence: 0.92
+  - id: hpf_on
+    host_name: HPF
+    name: HPF On
+    section: EQ
+    role: high-pass enable
+    unit: bool
+    min: 0.0
+    max: 1.0
+    default: 0.0
+    taper: linear
+    does: Enables the 12 dB/oct high-pass filter inside the EQ section.
+    musical_use: Remove rumble and proximity bass.
+    interactions:
+      - Needs EQ On as well.
+    safe_range:
+      - 0
+      - 1
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:22
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:22
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:22
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:22
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:22
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:22
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:22
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:22
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:22
+        confidence: 0.92
+  - id: hpf_freq
+    host_name: HPF Freq
+    name: HPF Frequency
+    section: EQ
+    role: high-pass cutoff
+    unit: Hz
+    min: 10.0
+    max: 2000.0
+    default: 80.0
+    taper: log
+    does: Cutoff of the high-pass, 10 Hz to 2 kHz (log).
+    musical_use: 60-120 Hz on most sources.
+    interactions:
+      - Only audible when both EQ On and HPF On.
+    safe_range:
+      - 20.0
+      - 300.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:23
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:23
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:23
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:23
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:23
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:23
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:23
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:23
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:23
+        confidence: 0.92
+  - id: low_gain
+    host_name: Low Gain
+    name: Low Gain
+    section: EQ
+    role: low shelf boost/cut
+    unit: dB
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: Low shelf gain, -24 to +24 dB (Q fixed at 0.707).
+    musical_use: Add warmth or reduce mud.
+    interactions:
+      - Needs EQ On; bypassed at exactly 0 dB.
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:24
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:24
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:24
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:24
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:24
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:24
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:24
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:24
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:24
+        confidence: 0.92
+  - id: low_freq
+    host_name: Low Freq
+    name: Low Frequency
+    section: EQ
+    role: low shelf corner
+    unit: Hz
+    min: 20.0
+    max: 1000.0
+    default: 100.0
+    taper: log
+    does: Corner frequency of the low shelf, 20 Hz to 1 kHz (log).
+    musical_use: 80-250 Hz.
+    interactions:
+      - Only audible when Low Gain is not 0.
+    safe_range:
+      - 40.0
+      - 400.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:25
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:25
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:25
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:25
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:25
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:25
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:25
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:25
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:25
+        confidence: 0.92
+  - id: mid_gain
+    host_name: Mid Gain
+    name: Mid Gain
+    section: EQ
+    role: mid bell boost/cut
+    unit: dB
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: Gain of the mid peaking bell, -24 to +24 dB.
+    musical_use: Shape presence or remove boxiness.
+    interactions:
+      - Needs EQ On; bypassed at exactly 0 dB.
+      - Mid Q sets the width.
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:26
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:26
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:26
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:26
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:26
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:26
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:26
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:26
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:26
+        confidence: 0.92
+  - id: mid_freq
+    host_name: Mid Freq
+    name: Mid Frequency
+    section: EQ
+    role: mid bell centre
+    unit: Hz
+    min: 100.0
+    max: 8000.0
+    default: 1000.0
+    taper: log
+    does: Centre frequency of the mid bell, 100 Hz to 8 kHz (log).
+    musical_use: Sweep to find the region to boost or cut.
+    interactions:
+      - Only audible when Mid Gain is not 0.
+    safe_range:
+      - 200.0
+      - 6000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:27
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:27
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:27
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:27
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:27
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:27
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:27
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:27
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:27
+        confidence: 0.92
+  - id: mid_q
+    host_name: Mid Q
+    name: Mid Q
+    section: EQ
+    role: mid bell width
+    unit: none
+    min: 0.1
+    max: 10.0
+    default: 1.0
+    taper: log
+    does: Q of the mid bell, 0.1-10 (higher is narrower).
+    musical_use: About 1 for broad tone, 4+ for corrective cuts.
+    interactions:
+      - Only audible when Mid Gain is not 0.
+    safe_range:
+      - 0.5
+      - 4.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:28
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:28
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:28
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:28
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:28
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:28
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:28
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:28
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:28
+        confidence: 0.92
+  - id: high_gain
+    host_name: High Gain
+    name: High Gain
+    section: EQ
+    role: high shelf boost/cut
+    unit: dB
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: High shelf gain, -24 to +24 dB (Q fixed at 0.707).
+    musical_use: Add air or tame harshness.
+    interactions:
+      - Needs EQ On; bypassed at exactly 0 dB.
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:29
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:29
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:29
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:29
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:29
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:29
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:29
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:29
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:29
+        confidence: 0.92
+  - id: high_freq
+    host_name: High Freq
+    name: High Frequency
+    section: EQ
+    role: high shelf corner
+    unit: Hz
+    min: 1000.0
+    max: 20000.0
+    default: 8000.0
+    taper: log
+    does: Corner frequency of the high shelf, 1-20 kHz (log).
+    musical_use: 6-12 kHz for air.
+    interactions:
+      - Only audible when High Gain is not 0.
+    safe_range:
+      - 3000.0
+      - 16000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:30
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:30
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:30
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:30
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:30
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:30
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:30
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:30
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:30
+        confidence: 0.92
+  - id: output_gain
+    host_name: Output
+    name: Output
+    section: Gain
+    role: output trim
+    unit: dB
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: Gain applied after all stages, -24 to +24 dB.
+    musical_use: Final level match.
+    interactions:
+      - Independent of the stage switches.
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:31
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:31
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:31
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:31
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:31
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:31
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:31
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:31
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/strip.rs:31
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/strip.rs:34
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/strip.rs:162
+    confidence: 0.95
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

@@ -1,0 +1,259 @@
+identity:
+  name: Pitch Shifter
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: pitch_shifter
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: Realtime granular pitch shifter (two crossfaded read taps sweeping a 50 ms delay window, a rotating-tape-head
+  design) with semitone and cent controls and dry/wet mix. Reports latency of half the window (about 25
+  ms).
+signal_flow: Input -> 50 ms delay line -> two read taps whose delay sweeps at (1 - ratio) per sample,
+  crossfaded with sine-squared gains (ratio = 2^((semitones + cents/100)/12)) -> wet; dry is read from
+  the window midpoint to stay time-aligned -> dry/wet mix.
+params:
+  - id: semitones
+    host_name: Semitones
+    name: Semitones
+    section: Pitch
+    role: coarse pitch shift
+    unit: semitones
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: Pitch shift in semitones, -24 to +24.
+    musical_use: +-12 for octave effects; +-7 for harmony layers.
+    interactions:
+      - Added to Fine to give the total shift.
+      - Large shifts and low-pitched material expose granular artefacts.
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:11
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:11
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:11
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:11
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:11
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:11
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:11
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:11
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:11
+        confidence: 0.92
+  - id: cents
+    host_name: Fine
+    name: Fine
+    section: Pitch
+    role: fine pitch shift
+    unit: cents
+    min: -100.0
+    max: 100.0
+    default: 0.0
+    taper: linear
+    does: Fine pitch shift in cents, -100 to +100, added to Semitones.
+    musical_use: +-5 to +-15 cents with Mix around 50% thickens a signal (detune doubling).
+    interactions:
+      - Total shift = Semitones + Fine/100 semitones.
+    safe_range:
+      - -50.0
+      - 50.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:12
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:12
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:12
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:12
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:12
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:12
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:12
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:12
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:12
+        confidence: 0.92
+  - id: mix
+    host_name: Mix
+    name: Mix
+    section: Output
+    role: dry/wet blend
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 100.0
+    taper: linear
+    does: Linear dry/wet blend; the dry path is delay-aligned with the wet.
+    musical_use: 100% for replacement, 30-50% for harmonies and thickening.
+    interactions:
+      - The plugin always adds ~25 ms latency, even at 0% Mix or 0 shift.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:13
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:13
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:13
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:13
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:13
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:13
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:13
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:13
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/pitch.rs:13
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/pitch.rs:16
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/pitch.rs:89
+    confidence: 0.95
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

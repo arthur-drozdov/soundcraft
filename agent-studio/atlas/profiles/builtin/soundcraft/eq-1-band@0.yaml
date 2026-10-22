@@ -1,0 +1,431 @@
+identity:
+  name: EQ 1-Band
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: eq_1band
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: 'Single-band equaliser: one biquad filter that can be a peaking bell, low/high shelf, high/low-pass,
+  notch or band-pass, plus an output gain.'
+signal_flow: Input -> one biquad filter (type, frequency, gain, Q) -> output gain. A Peak band with exactly
+  0 dB gain is bypassed. For non-peak types the Gain control still feeds the filter design (it only changes
+  the shelves; pass, notch and band-pass designs ignore it).
+modes:
+  - name: Peak
+    description: Bell boost/cut at Freq with Gain and Q.
+  - name: Low Shelf
+    description: Boost/cut everything below Freq by Gain.
+  - name: High Shelf
+    description: Boost/cut everything above Freq by Gain.
+  - name: High Pass
+    description: 12 dB/oct Butterworth-style high-pass at Freq with resonance set by Q; Gain is ignored.
+  - name: Low Pass
+    description: 12 dB/oct low-pass at Freq with resonance set by Q; Gain is ignored.
+  - name: Notch
+    description: Narrow cut at Freq, width set by Q; Gain is ignored.
+  - name: Band Pass
+    description: Passes a band around Freq, width set by Q; Gain is ignored.
+params:
+  - id: type
+    host_name: Type
+    name: Filter Type
+    section: Filter
+    role: filter shape selector
+    unit: choice
+    min: 0.0
+    max: 6.0
+    default: 0.0
+    taper: linear
+    choices:
+      - Peak
+      - Low Shelf
+      - High Shelf
+      - High Pass
+      - Low Pass
+      - Notch
+      - Band Pass
+    does: 'Chooses the filter shape: Peak, Low Shelf, High Shelf, High Pass, Low Pass, Notch or Band Pass
+      (indices 0..6).'
+    musical_use: Peak for tone shaping, Notch for removing a hum or ring, High/Low Pass for clean-up.
+    interactions:
+      - Gain only does something for Peak, Low Shelf and High Shelf.
+      - Switching type snaps the filter (no smoothing).
+    safe_range:
+      - 0
+      - 6
+    automatable: false
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:49
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:49
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:49
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:49
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      choices:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:49
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:49
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:49
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:49
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:49
+        confidence: 0.92
+  - id: freq
+    host_name: Freq
+    name: Frequency
+    section: Filter
+    role: filter centre/corner frequency
+    unit: Hz
+    min: 20.0
+    max: 20000.0
+    default: 1000.0
+    taper: log
+    does: Centre or corner frequency of the filter, log taper 20 Hz to 20 kHz.
+    musical_use: Place it on the problem or the desired tonal region.
+    interactions:
+      - With Peak at 0 dB gain nothing is audible whatever the frequency.
+    safe_range:
+      - 30.0
+      - 16000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:50
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:50
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:50
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:50
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:50
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:50
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:50
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:50
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:50
+        confidence: 0.92
+  - id: gain
+    host_name: Gain
+    name: Gain
+    section: Filter
+    role: boost/cut amount
+    unit: dB
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: Boost or cut in dB for Peak and shelf types.
+    musical_use: +-1 to 4 dB for tone, larger for correction.
+    interactions:
+      - Ignored by High Pass, Low Pass, Notch and Band Pass types.
+      - Peak type is bypassed at exactly 0 dB.
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:51
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:51
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:51
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:51
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:51
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:51
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:51
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:51
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:51
+        confidence: 0.92
+  - id: q
+    host_name: Q
+    name: Q
+    section: Filter
+    role: filter width/resonance
+    unit: none
+    min: 0.1
+    max: 10.0
+    default: 1.0
+    taper: log
+    does: 'Q of the filter: narrower bell/notch/band for higher values, more resonance on pass filters
+      and more overshoot on shelves.'
+    musical_use: 0.7-1 for broad tone; 4-10 for narrow notches.
+    interactions:
+      - Little audible effect on a Peak at 0 dB.
+    safe_range:
+      - 0.3
+      - 6.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:52
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:52
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:52
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:52
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:52
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:52
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:52
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:52
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:52
+        confidence: 0.92
+  - id: output_gain
+    host_name: Output
+    name: Output Gain
+    section: Output
+    role: post-filter level trim
+    unit: dB
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: Gain applied after the filter, in dB.
+    musical_use: Compensates for level change when boosting or cutting.
+    interactions:
+      - Independent of the filter type.
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:53
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:53
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:53
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:53
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:53
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:53
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:53
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:53
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:53
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/eq.rs:56
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/eq.rs:261
+    confidence: 0.95
+  modes:
+    source: source
+    ref: crates/dsp/src/plugins/eq.rs:111
+    confidence: 0.93
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

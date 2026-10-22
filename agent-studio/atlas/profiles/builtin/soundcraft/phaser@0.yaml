@@ -1,0 +1,485 @@
+identity:
+  name: Phaser
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: phaser
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: 'Phaser: a cascade of 2-12 first-order allpass stages whose corner frequency is swept by a sine
+  LFO around Center, with feedback and dry/wet mix.'
+signal_flow: Input + feedback -> N allpass stages (N = 2, 4, 6, 8 or 12), corner f = Center x 2^(2 x Depth
+  x LFO) clamped to 20 Hz..0.45 x sample rate -> output; the last stage output is fed back (Feedback,
+  bipolar). Output = dry x (1-Mix) + wet x Mix. Right channel LFO offset by a quarter cycle.
+modes:
+  - name: Stage count
+    description: 'Stages selects 2, 4, 6, 8 or 12 allpass stages: each pair adds one notch, so more stages
+      give a more complex, deeper sweep.'
+params:
+  - id: rate
+    host_name: Rate
+    name: Rate
+    section: Modulation
+    role: LFO rate
+    unit: Hz
+    min: 0.02
+    max: 5.0
+    default: 0.5
+    taper: log
+    does: LFO speed, 0.02-5 Hz (log).
+    musical_use: 0.2-0.8 Hz for classic phasing.
+    interactions:
+      - Faster rates become vibrato-like.
+    safe_range:
+      - 0.05
+      - 3.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:338
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:338
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:338
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:338
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:338
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:338
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:338
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:338
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:338
+        confidence: 0.92
+  - id: depth
+    host_name: Depth
+    name: Depth
+    section: Modulation
+    role: sweep depth
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 70.0
+    taper: linear
+    does: 'Sweep range in octaves: Center is swept by +-2 octaves x Depth/100.'
+    musical_use: 50-80% for broad sweeps.
+    interactions:
+      - Sweep is centred on the Center frequency, so a high Center with high Depth is limited by the Nyquist
+        clamp.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:339
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:339
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:339
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:339
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:339
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:339
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:339
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:339
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:339
+        confidence: 0.92
+  - id: stages
+    host_name: Stages
+    name: Stages
+    section: Filter
+    role: allpass stage count
+    unit: choice
+    min: 0.0
+    max: 4.0
+    default: 2.0
+    taper: linear
+    choices:
+      - '2'
+      - '4'
+      - '6'
+      - '8'
+      - '12'
+    does: 'Number of allpass stages: 2, 4, 6, 8 or 12 (choice index 0..4).'
+    musical_use: 4-6 stages for vintage phasers; 12 for a thick, modern sweep.
+    interactions:
+      - Switching stage count live truncates/continues the filter state and may click.
+    safe_range:
+      - 0
+      - 4
+    automatable: false
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:340
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:340
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:340
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:340
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      choices:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:340
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:340
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:340
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:340
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:340
+        confidence: 0.92
+  - id: feedback
+    host_name: Feedback
+    name: Feedback
+    section: Filter
+    role: resonance
+    unit: percent
+    min: -95.0
+    max: 95.0
+    default: 40.0
+    taper: linear
+    does: Feedback of the last stage into the input, -95 to +95%.
+    musical_use: 30-60% for pronounced swoosh; negative gives a hollow tone.
+    interactions:
+      - More stages plus high feedback gives strong resonance peaks and level jumps.
+    safe_range:
+      - -80.0
+      - 80.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:341
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:341
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:341
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:341
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:341
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:341
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:341
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:341
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:341
+        confidence: 0.92
+  - id: center
+    host_name: Center
+    name: Center
+    section: Filter
+    role: sweep centre frequency
+    unit: Hz
+    min: 100.0
+    max: 4000.0
+    default: 800.0
+    taper: log
+    does: Centre of the swept allpass corner frequency, 100 Hz-4 kHz (log).
+    musical_use: 400-1200 Hz for guitars and keys.
+    interactions:
+      - The actual sweep range is Center x 2^(+-2 x Depth).
+    safe_range:
+      - 150.0
+      - 3000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:342
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:342
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:342
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:342
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:342
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:342
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:342
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:342
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:342
+        confidence: 0.92
+  - id: mix
+    host_name: Mix
+    name: Mix
+    section: Output
+    role: dry/wet blend
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 50.0
+    taper: linear
+    does: Linear dry/wet blend.
+    musical_use: 50% gives the deepest notches.
+    interactions:
+      - 0% leaves the dry signal untouched.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:343
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:343
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:343
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:343
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:343
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:343
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:343
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:343
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:343
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/modulation.rs:346
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/modulation.rs:426
+    confidence: 0.95
+  modes:
+    source: source
+    ref: crates/dsp/src/plugins/modulation.rs:426
+    confidence: 0.93
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

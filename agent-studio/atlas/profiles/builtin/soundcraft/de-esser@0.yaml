@@ -1,0 +1,342 @@
+identity:
+  name: De-Esser
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: de_esser
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: 'Dynamic-EQ de-esser: a high-pass sidechain detects sibilance and a high shelf dips by up to
+  Range dB while the sibilant level exceeds Threshold. At rest the shelf is flat.'
+signal_flow: 'Detector: high-pass at Freq (12 dB/oct) -> loudest-channel level -> 0.5 ms attack / 60 ms
+  release envelope -> gain reduction = (envelope dB - Threshold) clamped to 0..Range -> a high-shelf at
+  0.8 x Freq (Q 0.8) cut by that amount, updated every 16 samples. In Listen mode the output is the detector
+  (high-passed) signal instead.'
+modes:
+  - name: Process
+    description: 'Listen off: the audio passes through the dynamic high shelf.'
+  - name: Listen
+    description: 'Listen on: outputs the high-passed detector signal so the sibilance band can be tuned
+      by ear.'
+params:
+  - id: freq
+    host_name: Freq
+    name: Frequency
+    section: Detector
+    role: sibilance centre
+    unit: Hz
+    min: 2000.0
+    max: 16000.0
+    default: 6000.0
+    taper: log
+    does: High-pass corner of the detector and basis of the shelf corner (shelf at 0.8 x Freq), log taper
+      2-16 kHz.
+    musical_use: 5-8 kHz for most voices; higher for female or bright vocals.
+    interactions:
+      - Shelf and detector both move with this control.
+      - The reduction is a shelf, so everything above the corner is dipped, not just a narrow band.
+    safe_range:
+      - 3000.0
+      - 12000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:336
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:336
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:336
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:336
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:336
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:336
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:336
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:336
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:336
+        confidence: 0.92
+  - id: range
+    host_name: Range
+    name: Range
+    section: Output
+    role: maximum reduction
+    unit: dB
+    min: 0.0
+    max: 40.0
+    default: 10.0
+    taper: linear
+    does: Maximum depth of the high-shelf dip, 0-40 dB.
+    musical_use: 3-8 dB for natural results; more sounds lispy.
+    interactions:
+      - 0 dB disables the effect.
+      - Reduction = level above Threshold, limited to Range.
+    safe_range:
+      - 0.0
+      - 15.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:337
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:337
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:337
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:337
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:337
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:337
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:337
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:337
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:337
+        confidence: 0.92
+  - id: threshold
+    host_name: Threshold
+    name: Threshold
+    section: Detector
+    role: sibilance threshold
+    unit: dB
+    min: -60.0
+    max: 0.0
+    default: -30.0
+    taper: linear
+    does: Level of the high-passed detector above which reduction starts, -60 to 0 dB.
+    musical_use: Lower until the harshest 's' sounds trigger 3-6 dB of reduction (see the gain reduction
+      meter).
+    interactions:
+      - Reduction scales 1 dB per dB over threshold until Range is reached.
+    safe_range:
+      - -50.0
+      - -15.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:338
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:338
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:338
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:338
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:338
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:338
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:338
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:338
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:338
+        confidence: 0.92
+  - id: listen
+    host_name: Listen
+    name: Listen
+    section: Monitor
+    role: detector monitor switch
+    unit: bool
+    min: 0.0
+    max: 1.0
+    default: 0.0
+    taper: linear
+    does: Outputs only the high-passed detector signal instead of the processed audio.
+    musical_use: Use temporarily to set Frequency, then switch off.
+    interactions:
+      - While on, no de-essing is applied to the output.
+    safe_range:
+      - 0
+      - 1
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:339
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:339
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:339
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:339
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:339
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:339
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:339
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:339
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:339
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/dynamics.rs:342
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/dynamics.rs:430
+    confidence: 0.95
+  modes:
+    source: source
+    ref: crates/dsp/src/plugins/dynamics.rs:430
+    confidence: 0.93
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

@@ -1,0 +1,44 @@
+identity:
+  name: Invert
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: invert
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: 'Polarity inversion: multiplies every sample by -1. No parameters.'
+signal_flow: Input x -1 -> output.
+params: []
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:257
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:285
+    confidence: 0.95
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

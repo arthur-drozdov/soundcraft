@@ -1,0 +1,263 @@
+identity:
+  name: Maximizer
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: maximizer
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: 'Lookahead brickwall limiter/maximizer: the input is driven up by -Threshold dB and the output
+  never exceeds the Ceiling. Fixed 1.5 ms lookahead.'
+signal_flow: Input x drive (= -Threshold dB) -> 1.5 ms delay line; peak detector requests ceiling/peak
+  gain -> min-hold over the lookahead window with Release recovery -> equal-length moving average ramps
+  gain down before the peak -> delayed signal x gain -> hard clamp to +-ceiling. Reports latency of about
+  1.5 ms and a gain reduction meter.
+params:
+  - id: threshold
+    host_name: Threshold
+    name: Threshold
+    section: Input
+    role: input drive
+    unit: dB
+    min: -30.0
+    max: 0.0
+    default: 0.0
+    taper: linear
+    does: 'Acts as input drive: the signal is boosted by -Threshold dB (0 to 30 dB) before limiting, so
+      lower values are louder.'
+    musical_use: Pull down until the gain reduction meter shows 2-6 dB for loudness; watch distortion
+      beyond that.
+    interactions:
+      - The ceiling is fixed regardless of this setting, so more drive means more limiting, not a hotter
+        output.
+      - 'Behaves oppositely to a compressor threshold: lowering it increases output loudness.'
+    safe_range:
+      - -12.0
+      - 0.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:480
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:480
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:480
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:480
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:480
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:480
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:480
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:480
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:480
+        confidence: 0.92
+  - id: ceiling
+    host_name: Ceiling
+    name: Ceiling
+    section: Output
+    role: output ceiling
+    unit: dB
+    min: -30.0
+    max: 0.0
+    default: -0.3
+    taper: linear
+    does: Maximum output sample peak, -30 to 0 dB; applied immediately (not smoothed) as a hard guarantee.
+    musical_use: -1.0 to -0.3 dB leaves headroom for codecs and inter-sample peaks (this is a sample-peak,
+      not true-peak, limiter).
+    interactions:
+      - Does not influence the amount of limiting; only the final level.
+    safe_range:
+      - -3.0
+      - -0.1
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:481
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:481
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:481
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:481
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:481
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:481
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:481
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:481
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:481
+        confidence: 0.92
+  - id: release
+    host_name: Release
+    name: Release
+    section: Ballistics
+    role: gain recovery time
+    unit: ms
+    min: 1.0
+    max: 1000.0
+    default: 50.0
+    taper: log
+    does: How quickly the limiter gain recovers after a peak, 1 ms to 1 s (log).
+    musical_use: 20-100 ms for dense masters; longer sounds smoother but can pump.
+    interactions:
+      - Short releases at high drive add distortion; the 1.5 ms lookahead is fixed.
+    safe_range:
+      - 10.0
+      - 500.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:482
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:482
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:482
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:482
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:482
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:482
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:482
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:482
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:482
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/dynamics.rs:485
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/dynamics.rs:585
+    confidence: 0.95
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

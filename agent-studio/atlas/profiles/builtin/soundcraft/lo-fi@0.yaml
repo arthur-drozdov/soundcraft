@@ -1,0 +1,332 @@
+identity:
+  name: Lo-Fi
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: lofi
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: 'Bit crusher and sample-rate reducer with optional noise: a sample-and-hold decimator plus amplitude
+  quantisation, without anti-alias filtering.'
+signal_flow: Input -> every 1/SampleRate seconds grab a sample, add noise (amount^2 x 0.1 amplitude, uniform)
+  and quantise it to 2^(1-bits) steps -> hold until the next grab -> dry/wet mix. No filtering before
+  the hold, so aliasing is intentional.
+params:
+  - id: bits
+    host_name: Bit Depth
+    name: Bit Depth
+    section: Crush
+    role: quantiser resolution
+    unit: bits
+    min: 1.0
+    max: 24.0
+    default: 8.0
+    taper: linear
+    does: Number of bits of amplitude resolution, 1-24 (step = 2^(1 - bits)); the value is continuous,
+      not rounded.
+    musical_use: 10-12 bits for gentle grit; 4-6 for heavy crush.
+    interactions:
+      - 24 bits is practically transparent.
+      - Quantisation noise is correlated with the signal (no dither).
+    safe_range:
+      - 4.0
+      - 24.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:127
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:127
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:127
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:127
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:127
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:127
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:127
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:127
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:127
+        confidence: 0.92
+  - id: sample_rate
+    host_name: Sample Rate
+    name: Sample Rate
+    section: Crush
+    role: decimation rate
+    unit: Hz
+    min: 500.0
+    max: 48000.0
+    default: 11025.0
+    taper: log
+    does: Rate at which input samples are held, 500 Hz-48 kHz (log); values at or above the host rate
+      do nothing.
+    musical_use: 8-16 kHz for retro; below 4 kHz is extreme.
+    interactions:
+      - The host rate acts as an upper bound (no effect when equal or higher).
+      - 'No anti-alias filter: lower rates fold harmonics back as inharmonic noise.'
+    safe_range:
+      - 2000.0
+      - 48000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:128
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:128
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:128
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:128
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:128
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:128
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:128
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:128
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:128
+        confidence: 0.92
+  - id: noise
+    host_name: Noise
+    name: Noise
+    section: Noise
+    role: added noise amount
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 0.0
+    taper: linear
+    does: Amount of uniform noise added before quantisation (amplitude scales with the square of the value,
+      up to 0.1 full scale).
+    musical_use: 5-20% for vinyl/tape-style hiss.
+    interactions:
+      - Noise is sampled at the held rate, so it sounds steppy at low Sample Rate.
+    safe_range:
+      - 0.0
+      - 50.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:129
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:129
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:129
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:129
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:129
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:129
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:129
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:129
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:129
+        confidence: 0.92
+  - id: mix
+    host_name: Mix
+    name: Mix
+    section: Output
+    role: dry/wet blend
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 100.0
+    taper: linear
+    does: Linear dry/wet blend.
+    musical_use: 30-70% for parallel crush.
+    interactions:
+      - The dry path is unprocessed and unaffected by the other controls.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:130
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:130
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:130
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:130
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:130
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:130
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:130
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:130
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:130
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/harmonic.rs:133
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/harmonic.rs:201
+    confidence: 0.95
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

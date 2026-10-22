@@ -1,0 +1,400 @@
+identity:
+  name: Saturator
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: saturator
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: Smooth tanh waveshaper saturator with drive, asymmetry (even harmonics), a tone low-pass, dry/wet
+  mix and output trim. The curve is normalised so a full-scale input still peaks near full scale at any
+  drive.
+signal_flow: Input -> tanh(drive x x + bias) - tanh(bias), normalised by 1/(tanh(drive + bias) - tanh(bias))
+  -> DC blocker (10 Hz, only when Asymmetry > 0) -> one-pole low-pass at Tone (bypassed at 20 kHz) ->
+  dry/wet mix -> output gain. Not oversampled, so high drive can alias.
+params:
+  - id: drive
+    host_name: Drive
+    name: Drive
+    section: Saturation
+    role: input drive
+    unit: dB
+    min: 0.0
+    max: 36.0
+    default: 6.0
+    taper: linear
+    does: Gain into the tanh shaper, 0-36 dB; more drive means more harmonics and a flatter waveform.
+    musical_use: 2-8 dB for subtle warmth; 15+ dB for obvious distortion.
+    interactions:
+      - Output level stays near-constant (the curve is normalised), so Output rarely needs compensating.
+      - 'No oversampling: very high drive on bright sources can alias.'
+    safe_range:
+      - 0.0
+      - 18.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:8
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:8
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:8
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:8
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:8
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:8
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:8
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:8
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:8
+        confidence: 0.92
+  - id: bias
+    host_name: Asymmetry
+    name: Asymmetry
+    section: Saturation
+    role: DC bias / even harmonics
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 0.0
+    taper: linear
+    does: Adds a bias (0-0.5 of full scale) before the shaper so positive and negative halves clip differently,
+      creating even harmonics; DC is blocked afterwards.
+    musical_use: 10-40% for tube-like warmth.
+    interactions:
+      - Enables a 10 Hz DC blocker in the signal path.
+    safe_range:
+      - 0.0
+      - 60.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:9
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:9
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:9
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:9
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:9
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:9
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:9
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:9
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:9
+        confidence: 0.92
+  - id: tone
+    host_name: Tone
+    name: Tone
+    section: Tone
+    role: post-shaper low-pass
+    unit: Hz
+    min: 1000.0
+    max: 20000.0
+    default: 20000.0
+    taper: log
+    does: Cutoff of a one-pole low-pass after the shaper, 1-20 kHz (log); 20 kHz switches the filter off.
+    musical_use: 4-8 kHz to tame harsh distortion; leave at maximum for full bandwidth.
+    interactions:
+      - The filter acts on the wet path only, before the Mix.
+    safe_range:
+      - 3000.0
+      - 20000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:10
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:10
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:10
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:10
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:10
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:10
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:10
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:10
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:10
+        confidence: 0.92
+  - id: mix
+    host_name: Mix
+    name: Mix
+    section: Output
+    role: dry/wet blend
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 100.0
+    taper: linear
+    does: Linear blend of dry (0) and saturated (100) signal.
+    musical_use: 30-60% for parallel saturation.
+    interactions:
+      - Mix is applied before Output gain; Tone filters only the wet path.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:11
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:11
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:11
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:11
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:11
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:11
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:11
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:11
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:11
+        confidence: 0.92
+  - id: output
+    host_name: Output
+    name: Output
+    section: Output
+    role: output trim
+    unit: dB
+    min: -24.0
+    max: 12.0
+    default: 0.0
+    taper: linear
+    does: Gain after mixing, -24 to +12 dB.
+    musical_use: Match loudness to the bypassed signal.
+    interactions:
+      - Applies to both dry and wet.
+    safe_range:
+      - -12.0
+      - 6.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:12
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:12
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:12
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:12
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:12
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:12
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:12
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:12
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/harmonic.rs:12
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/harmonic.rs:15
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/harmonic.rs:95
+    confidence: 0.95
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

@@ -1,0 +1,397 @@
+identity:
+  name: Flanger
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: flanger
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: 'Stereo flanger: a very short delay (0.1-10 ms) swept by a sine LFO from (1 - Depth) x Delay
+  up to Delay, with bipolar feedback for comb-filter resonances.'
+signal_flow: Input -> delay line read at Delay x (1 - Depth x 0.5 x (1 - sin)) (cubic interpolation, minimum
+  0.05 ms) -> mixed with dry (Mix); the delayed output feeds back (Feedback, can be negative). Right channel
+  LFO offset by a quarter cycle (fixed).
+params:
+  - id: rate
+    host_name: Rate
+    name: Rate
+    section: Modulation
+    role: LFO rate
+    unit: Hz
+    min: 0.02
+    max: 5.0
+    default: 0.25
+    taper: log
+    does: LFO speed, 0.02-5 Hz (log).
+    musical_use: 0.1-0.5 Hz for slow jet sweeps.
+    interactions:
+      - Faster rates sound like warble.
+    safe_range:
+      - 0.05
+      - 2.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.92
+  - id: depth
+    host_name: Depth
+    name: Depth
+    section: Modulation
+    role: sweep depth
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 70.0
+    taper: linear
+    does: Fraction of the delay that is swept; at 100% the delay sweeps from 0 up to Delay.
+    musical_use: 50-80% for dramatic sweeps.
+    interactions:
+      - 'Sweep range is relative to Delay: depth x delay.'
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.92
+  - id: delay
+    host_name: Delay
+    name: Delay
+    section: Delay
+    role: maximum delay
+    unit: ms
+    min: 0.1
+    max: 10.0
+    default: 2.0
+    taper: linear
+    does: Upper end of the swept delay time, 0.1-10 ms.
+    musical_use: 1-4 ms for classic flanging.
+    interactions:
+      - Sets the lowest comb notch frequency (about 1/(2 x delay)).
+    safe_range:
+      - 0.5
+      - 8.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.92
+  - id: feedback
+    host_name: Feedback
+    name: Feedback
+    section: Delay
+    role: regeneration
+    unit: percent
+    min: -95.0
+    max: 95.0
+    default: 50.0
+    taper: linear
+    does: Feedback amount, -95 to +95%; negative inverts polarity for a hollow, metallic sound.
+    musical_use: 40-70% for strong flange; negative for a different spectrum.
+    interactions:
+      - High magnitude values ring strongly and can exceed the input level.
+    safe_range:
+      - -80.0
+      - 80.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.92
+  - id: mix
+    host_name: Mix
+    name: Mix
+    section: Output
+    role: dry/wet blend
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 50.0
+    taper: linear
+    does: Linear dry/wet blend.
+    musical_use: 50% gives deepest notches.
+    interactions:
+      - At 50% with positive feedback, notches are deepest.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/modulation.rs:178
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/modulation.rs:288
+    confidence: 0.95
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

@@ -1,0 +1,836 @@
+identity:
+  name: Compressor/Limiter
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: compressor
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: Stereo-linked feed-forward compressor/limiter with soft knee, makeup gain, optional sidechain
+  high-pass, lookahead (up to 10 ms) and dry/wet mix for parallel compression.
+signal_flow: Detector level = loudest channel's absolute sample (after the optional sidechain high-pass,
+  which affects detection only) -> log-domain soft-knee gain computer (threshold, ratio, knee) -> attack/release
+  smoothing of the gain reduction -> gain applied to the (optionally lookahead-delayed) dry signal, times
+  makeup -> dry/wet mix. All channels share one gain so the stereo image does not shift.
+modes:
+  - name: Compressor
+    description: 'Limit switch off: ratio set by the Ratio control, soft knee as set.'
+  - name: Limiter
+    description: 'Limit switch on: the ratio is forced to 1000:1 and the Ratio control is ignored; threshold,
+      knee, attack and release still apply.'
+params:
+  - id: threshold
+    host_name: Threshold
+    name: Threshold
+    section: Detector
+    role: compression threshold
+    unit: dB
+    min: -60.0
+    max: 0.0
+    default: -20.0
+    taper: linear
+    does: Level above which gain reduction starts, -60 to 0 dB (peak, not RMS).
+    musical_use: Set so that loud peaks reduce 3-6 dB for gentle control, more for heavy squash.
+    interactions:
+      - Lower threshold plus higher ratio means more gain reduction; compensate with Makeup.
+      - The knee straddles the threshold (half of Knee below, half above).
+    safe_range:
+      - -40.0
+      - -6.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:35
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:35
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:35
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:35
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:35
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:35
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:35
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:35
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:35
+        confidence: 0.92
+  - id: ratio
+    host_name: Ratio
+    name: Ratio
+    section: Gain Computer
+    role: compression ratio
+    unit: ratio
+    min: 1.0
+    max: 100.0
+    default: 4.0
+    taper: log
+    does: Input-over-threshold to output-over-threshold ratio, log taper 1:1 to 100:1.
+    musical_use: 2:1-4:1 transparent leveling; 8:1+ for limiting-like control.
+    interactions:
+      - Ignored while Limit is on (ratio fixed at 1000:1).
+      - At 1:1 the plugin does nothing except makeup/mix.
+    safe_range:
+      - 1.5
+      - 10.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:36
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:36
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:36
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:36
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:36
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:36
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:36
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:36
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:36
+        confidence: 0.92
+  - id: attack
+    host_name: Attack
+    name: Attack
+    section: Ballistics
+    role: gain-reduction attack time
+    unit: ms
+    min: 0.01
+    max: 300.0
+    default: 10.0
+    taper: log
+    does: One-pole time constant (not time-to-full) with which gain reduction increases, 0.01 to 300 ms.
+    musical_use: Slow (20-50 ms) lets transients through for punch; fast (<2 ms) tames them.
+    interactions:
+      - Very fast attack with no lookahead can distort low frequencies.
+      - Lookahead lets a short attack act before the peak arrives.
+    safe_range:
+      - 0.1
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:37
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:37
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:37
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:37
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:37
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:37
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:37
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:37
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:37
+        confidence: 0.92
+  - id: release
+    host_name: Release
+    name: Release
+    section: Ballistics
+    role: gain-reduction release time
+    unit: ms
+    min: 5.0
+    max: 3000.0
+    default: 100.0
+    taper: log
+    does: One-pole time constant with which gain reduction recovers, 5 ms to 3 s.
+    musical_use: 'Match to the tempo/decay of the material: 50-150 ms drums, 200-800 ms mix bus or vocals.'
+    interactions:
+      - Too short pumps and adds distortion on bass; too long never lets the level recover.
+    safe_range:
+      - 20.0
+      - 1000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:38
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:38
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:38
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:38
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:38
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:38
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:38
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:38
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:38
+        confidence: 0.92
+  - id: knee
+    host_name: Knee
+    name: Knee
+    section: Gain Computer
+    role: knee width
+    unit: dB
+    min: 0.0
+    max: 24.0
+    default: 6.0
+    taper: linear
+    does: Width of the soft-knee region around the threshold, 0 (hard) to 24 dB.
+    musical_use: 6 dB (default) is smooth; 0 for a more obvious clamp.
+    interactions:
+      - The knee begins Knee/2 below the threshold, so gain reduction starts earlier than the Threshold
+        value suggests.
+    safe_range:
+      - 0.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:39
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:39
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:39
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:39
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:39
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:39
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:39
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:39
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:39
+        confidence: 0.92
+  - id: makeup
+    host_name: Makeup
+    name: Makeup Gain
+    section: Output
+    role: makeup gain
+    unit: dB
+    min: 0.0
+    max: 40.0
+    default: 0.0
+    taper: linear
+    does: Fixed gain added after compression, 0 to 40 dB (not automatic).
+    musical_use: Set so the compressed level matches the bypassed level when comparing.
+    interactions:
+      - Does not track the amount of gain reduction; changing threshold or ratio requires re-adjusting
+        it.
+      - Can clip the next stage at large values.
+    safe_range:
+      - 0.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:40
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:40
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:40
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:40
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:40
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:40
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:40
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:40
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:40
+        confidence: 0.92
+  - id: sc_hpf_on
+    host_name: SC HPF
+    name: Sidechain HPF On
+    section: Sidechain
+    role: detector high-pass enable
+    unit: bool
+    min: 0.0
+    max: 1.0
+    default: 0.0
+    taper: linear
+    does: Enables a high-pass filter in the detector path only (the audio itself is not filtered).
+    musical_use: Stops bass energy from triggering heavy pumping on a full mix.
+    interactions:
+      - SC HPF Freq only matters while this is on.
+    safe_range:
+      - 0
+      - 1
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:41
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:41
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:41
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:41
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:41
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:41
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:41
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:41
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:41
+        confidence: 0.92
+  - id: sc_hpf_freq
+    host_name: SC HPF Freq
+    name: Sidechain HPF Frequency
+    section: Sidechain
+    role: detector high-pass cutoff
+    unit: Hz
+    min: 20.0
+    max: 500.0
+    default: 100.0
+    taper: log
+    does: Cutoff of the detector high-pass (12 dB/oct), log taper 20-500 Hz.
+    musical_use: 80-150 Hz is a typical setting for bus compression.
+    interactions:
+      - Only audible when SC HPF is on.
+    safe_range:
+      - 40.0
+      - 300.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:42
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:42
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:42
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:42
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:42
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:42
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:42
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:42
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:42
+        confidence: 0.92
+  - id: limiter
+    host_name: Limit
+    name: Limit
+    section: Gain Computer
+    role: limiter mode switch
+    unit: bool
+    min: 0.0
+    max: 1.0
+    default: 0.0
+    taper: linear
+    does: When on, the ratio is forced to 1000:1 so the plugin acts as a limiter above the threshold.
+    musical_use: Use as a simple peak limiter; set Attack very short and enable Lookahead.
+    interactions:
+      - Overrides the Ratio control.
+    safe_range:
+      - 0
+      - 1
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:43
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:43
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:43
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:43
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:43
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:43
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:43
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:43
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:43
+        confidence: 0.92
+  - id: lookahead
+    host_name: Lookahead
+    name: Lookahead
+    section: Detector
+    role: lookahead delay
+    unit: ms
+    min: 0.0
+    max: 10.0
+    default: 0.0
+    taper: linear
+    does: Delays the audio by this many ms (0-10) so the detector sees peaks early; the plugin reports
+      the same delay as latency.
+    musical_use: 1-5 ms with fast attacks for transparent peak control.
+    interactions:
+      - Adds latency equal to the setting (compensated by the host's delay compensation).
+      - Changing it live moves the delay tap and may click.
+    safe_range:
+      - 0.0
+      - 5.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:44
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:44
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:44
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:44
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:44
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:44
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:44
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:44
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:44
+        confidence: 0.92
+  - id: mix
+    host_name: Mix
+    name: Mix
+    section: Output
+    role: dry/wet blend
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 100.0
+    taper: linear
+    does: Blend of uncompressed (0) and compressed (100) signal; the dry path is lookahead-aligned.
+    musical_use: 30-60 gives parallel (New York style) compression.
+    interactions:
+      - At 0% the compressor has no effect except latency; Makeup only applies to the wet portion.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:45
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:45
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:45
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:45
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:45
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:45
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:45
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:45
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:45
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/dynamics.rs:48
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/dynamics.rs:159
+    confidence: 0.95
+  modes:
+    source: source
+    ref: crates/dsp/src/plugins/dynamics.rs:118
+    confidence: 0.93
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

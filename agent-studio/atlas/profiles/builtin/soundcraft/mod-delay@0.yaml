@@ -1,0 +1,471 @@
+identity:
+  name: Mod Delay
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: mod_delay
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: Feedback delay with up to 2 s of delay time, a modulated delay line (chorus-like movement up
+  to 5 ms) and a low-pass filter in the feedback path. Time is set in milliseconds only (no tempo sync).
+signal_flow: Input -> delay line (cubic-interpolated read at Time + LFO modulation) -> one-pole low-pass
+  (LPF) -> output wet; the low-passed wet signal is fed back (Feedback, can be negative) into the line
+  along with the dry input. Output = dry x (1-Mix) + wet x Mix. Right channel LFO phase is offset by a
+  quarter cycle.
+params:
+  - id: time
+    host_name: Time
+    name: Time
+    section: Delay
+    role: delay time
+    unit: ms
+    min: 1.0
+    max: 2000.0
+    default: 250.0
+    taper: log
+    does: Delay time between repeats, 1 ms to 2 s (log), smoothed over 120 ms so changes glide.
+    musical_use: 'Compute from tempo manually: 60000/BPM ms per quarter note.'
+    interactions:
+      - Changing it while audio plays causes a pitch-bend effect on the repeats.
+      - Tail length is Time x number of repeats until feedback decays 60 dB.
+    safe_range:
+      - 20.0
+      - 1500.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:20
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:20
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:20
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:20
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:20
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:20
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:20
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:20
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:20
+        confidence: 0.92
+  - id: feedback
+    host_name: Feedback
+    name: Feedback
+    section: Delay
+    role: regeneration amount
+    unit: percent
+    min: -99.0
+    max: 99.0
+    default: 30.0
+    taper: linear
+    does: Amount of the wet signal fed back, -99 to +99%; negative values invert polarity of each repeat.
+    musical_use: 20-40% for a few repeats; higher for washes.
+    interactions:
+      - Near +-99% repeats nearly never decay and build up.
+      - The LPF filters each pass, so repeats get darker.
+    safe_range:
+      - 0.0
+      - 70.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:21
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:21
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:21
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:21
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:21
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:21
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:21
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:21
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:21
+        confidence: 0.92
+  - id: mix
+    host_name: Mix
+    name: Mix
+    section: Output
+    role: dry/wet blend
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 30.0
+    taper: linear
+    does: Linear blend of dry (0) and delayed (100) signal.
+    musical_use: 15-35% on an insert; 100% on a send.
+    interactions:
+      - Wet is the low-passed delay output.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:22
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:22
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:22
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:22
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:22
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:22
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:22
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:22
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:22
+        confidence: 0.92
+  - id: mod_rate
+    host_name: Mod Rate
+    name: Mod Rate
+    section: Modulation
+    role: LFO rate
+    unit: Hz
+    min: 0.01
+    max: 10.0
+    default: 0.5
+    taper: log
+    does: Speed of the sine LFO modulating the delay time, 0.01-10 Hz (log).
+    musical_use: Slow (0.2-1 Hz) for tape-like wobble.
+    interactions:
+      - Only audible when Mod Depth is above 0.
+    safe_range:
+      - 0.05
+      - 5.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:23
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:23
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:23
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:23
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:23
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:23
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:23
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:23
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:23
+        confidence: 0.92
+  - id: mod_depth
+    host_name: Mod Depth
+    name: Mod Depth
+    section: Modulation
+    role: LFO depth
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 0.0
+    taper: linear
+    does: 'Amount of modulation: 100% sweeps the delay time by up to 5 ms.'
+    musical_use: 10-40% for subtle thickening; more for chorus-like warble.
+    interactions:
+      - Only audible when above 0.
+      - Pitch deviation grows with both depth and rate.
+    safe_range:
+      - 0.0
+      - 60.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:24
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:24
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:24
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:24
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:24
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:24
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:24
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:24
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:24
+        confidence: 0.92
+  - id: lpf
+    host_name: LPF
+    name: LPF
+    section: Tone
+    role: feedback low-pass
+    unit: Hz
+    min: 500.0
+    max: 20000.0
+    default: 12000.0
+    taper: log
+    does: Cutoff of the low-pass in the feedback/wet path, 500 Hz-20 kHz (log); applied to every repeat.
+    musical_use: 3-6 kHz for analogue-style dark repeats; 12 kHz+ for clean digital ones.
+    interactions:
+      - Also darkens the first repeat, because the wet output is taken after the filter.
+    safe_range:
+      - 1000.0
+      - 20000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:25
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:25
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:25
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:25
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:25
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:25
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:25
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:25
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:25
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/modulation.rs:28
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/modulation.rs:116
+    confidence: 0.95
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

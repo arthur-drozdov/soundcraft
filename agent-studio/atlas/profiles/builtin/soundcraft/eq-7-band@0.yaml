@@ -1,0 +1,1710 @@
+identity:
+  name: EQ 7-Band
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: eq_7band
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: 'Seven-section parametric equaliser: high-pass filter, low shelf, three peaking bells (low-mid,
+  mid, high-mid), high shelf and low-pass filter, with input and output gain. Filters are biquads whose
+  coefficients are smoothed (20 ms) when parameters move.'
+signal_flow: Input gain -> optional HPF (6/12/18/24 dB/oct) -> low shelf -> low-mid bell -> mid bell ->
+  high-mid bell -> high shelf -> optional LPF (6/12/18/24 dB/oct) -> output gain. A shelf or bell with
+  exactly 0 dB gain is bypassed. Sections run in series on every channel (no stereo linking differences).
+modes:
+  - name: HPF/LPF slope
+    description: The two pass filters each pick 6 dB/oct (one-pole), 12 dB/oct (Butterworth biquad), 18
+      dB/oct (one-pole plus a Q=1 biquad) or 24 dB/oct (two cascaded Butterworth biquads).
+  - name: Band bypass
+    description: Each of the five EQ bands is bypassed whenever its gain is exactly 0 dB; the pass filters
+      are bypassed while their on-switch is off.
+params:
+  - id: input_gain
+    host_name: Input
+    name: Input Gain
+    section: Gain
+    role: pre-EQ level trim
+    unit: dB
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: Gain applied before the EQ sections, in dB (summed with Output into one smoothed gain stage).
+    musical_use: Trim level before heavy boosts, or after bypass-comparison, to keep the output level
+      matched.
+    interactions:
+      - 'Same effect as Output Gain in this implementation: both are summed into a single gain after the
+        filters; use either, not both, to compensate.'
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:11
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:11
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:11
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:11
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:11
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:11
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:11
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:11
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:11
+        confidence: 0.92
+  - id: hpf_on
+    host_name: HPF
+    name: HPF On
+    section: High-Pass
+    role: high-pass filter enable
+    unit: bool
+    min: 0.0
+    max: 1.0
+    default: 0.0
+    taper: linear
+    does: Switches the high-pass filter on or off.
+    musical_use: Switch on to clear rumble, handling noise and mic proximity build-up.
+    interactions:
+      - HPF Frequency and HPF Slope only matter while this is on.
+    safe_range:
+      - 0
+      - 1
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:12
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:12
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:12
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:12
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:12
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:12
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:12
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:12
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:12
+        confidence: 0.92
+  - id: hpf_freq
+    host_name: HPF Freq
+    name: HPF Frequency
+    section: High-Pass
+    role: high-pass cutoff
+    unit: Hz
+    min: 10.0
+    max: 2000.0
+    default: 80.0
+    taper: log
+    does: Cutoff of the high-pass filter, log taper 10 Hz to 2 kHz.
+    musical_use: 60-100 Hz for vocals and guitars, 30-40 Hz for kick/bass cleanup.
+    interactions:
+      - Only audible when HPF On is on.
+      - Slope setting decides how steeply content below this frequency is removed.
+    safe_range:
+      - 20.0
+      - 300.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:13
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:13
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:13
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:13
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:13
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:13
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:13
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:13
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:13
+        confidence: 0.92
+  - id: hpf_slope
+    host_name: HPF Slope
+    name: HPF Slope
+    section: High-Pass
+    role: high-pass steepness
+    unit: choice
+    min: 0.0
+    max: 3.0
+    default: 1.0
+    taper: linear
+    choices:
+      - 6 dB/oct
+      - 12 dB/oct
+      - 18 dB/oct
+      - 24 dB/oct
+    does: 'Selects the high-pass slope: 6, 12, 18 or 24 dB/oct (choice index 0..3).'
+    musical_use: 12 dB/oct for gentle cleanup; 24 dB/oct for decisive low-end removal.
+    interactions:
+      - Only audible when HPF On is on.
+      - Switching slope snaps the filter (no smoothing), so avoid ramping it on playing material.
+    safe_range:
+      - 0
+      - 3
+    automatable: false
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:14
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:14
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:14
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:14
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      choices:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:14
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:14
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:14
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:14
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:14
+        confidence: 0.92
+  - id: low_shelf_freq
+    host_name: LF Freq
+    name: LF Frequency
+    section: Low Shelf
+    role: lf shelf corner frequency
+    unit: Hz
+    min: 20.0
+    max: 1000.0
+    default: 100.0
+    taper: log
+    does: Sets the corner (midpoint) frequency of the LF shelf; log taper 20-1000 Hz.
+    musical_use: Park it on the region you want to lift or cut, e.g. body, boxiness, presence or air.
+    interactions:
+      - 'Has no audible effect while LF Gain is 0 dB: the band is bypassed (identity filter) when |gain|
+        <= 0.0001 dB.'
+      - Moving it does not change gain, only where the gain lands.
+    safe_range:
+      - 40.0
+      - 400.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:15
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:15
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:15
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:15
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:15
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:15
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:15
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:15
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:15
+        confidence: 0.92
+  - id: low_shelf_gain
+    host_name: LF Gain
+    name: LF Gain
+    section: Low Shelf
+    role: lf band boost/cut
+    unit: dB
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: Boost or cut of the LF shelf in dB; exactly 0 dB bypasses the band.
+    musical_use: Small moves (+-1 to 4 dB) are tonal shaping; larger cuts are corrective.
+    interactions:
+      - 'Interacts with LF Q: a higher Q narrows the affected region.'
+      - Adds to the overall level, so compensate with Output if boosting several bands.
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:16
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:16
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:16
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:16
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:16
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:16
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:16
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:16
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:16
+        confidence: 0.92
+  - id: low_shelf_q
+    host_name: LF Q
+    name: LF Q
+    section: Low Shelf
+    role: lf band width/slope
+    unit: none
+    min: 0.3
+    max: 2.0
+    default: 0.707
+    taper: log
+    does: Q (bandwidth) of the LF shelf; higher is narrower for a bell, steeper and with more overshoot
+      for a shelf.
+    musical_use: 0.707 is the smooth default; raise a little for a more pronounced shelf shoulder.
+    interactions:
+      - Only audible when LF Gain is non-zero.
+    safe_range:
+      - 0.5
+      - 1.2
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:17
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:17
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:17
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:17
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:17
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:17
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:17
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:17
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:17
+        confidence: 0.92
+  - id: low_mid_freq
+    host_name: LMF Freq
+    name: LMF Frequency
+    section: Low-Mid
+    role: lmf band centre frequency
+    unit: Hz
+    min: 20.0
+    max: 2000.0
+    default: 250.0
+    taper: log
+    does: Sets the centre frequency of the LMF peaking bell; log taper 20-2000 Hz.
+    musical_use: Park it on the region you want to lift or cut, e.g. body, boxiness, presence or air.
+    interactions:
+      - 'Has no audible effect while LMF Gain is 0 dB: the band is bypassed (identity filter) when |gain|
+        <= 0.0001 dB.'
+      - Moving it does not change gain, only where the gain lands.
+    safe_range:
+      - 100.0
+      - 800.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:18
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:18
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:18
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:18
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:18
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:18
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:18
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:18
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:18
+        confidence: 0.92
+  - id: low_mid_gain
+    host_name: LMF Gain
+    name: LMF Gain
+    section: Low-Mid
+    role: lmf band boost/cut
+    unit: dB
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: Boost or cut of the LMF peaking bell in dB; exactly 0 dB bypasses the band.
+    musical_use: Small moves (+-1 to 4 dB) are tonal shaping; larger cuts are corrective.
+    interactions:
+      - 'Interacts with LMF Q: a higher Q narrows the affected region.'
+      - Adds to the overall level, so compensate with Output if boosting several bands.
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:19
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:19
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:19
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:19
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:19
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:19
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:19
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:19
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:19
+        confidence: 0.92
+  - id: low_mid_q
+    host_name: LMF Q
+    name: LMF Q
+    section: Low-Mid
+    role: lmf band width/slope
+    unit: none
+    min: 0.1
+    max: 10.0
+    default: 1.0
+    taper: log
+    does: Q (bandwidth) of the LMF peaking bell; higher is narrower for a bell, steeper and with more
+      overshoot for a shelf.
+    musical_use: About 0.7-1 is broad and musical; 4+ for surgical cuts.
+    interactions:
+      - Only audible when LMF Gain is non-zero.
+    safe_range:
+      - 0.5
+      - 4.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:20
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:20
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:20
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:20
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:20
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:20
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:20
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:20
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:20
+        confidence: 0.92
+  - id: mid_freq
+    host_name: MF Freq
+    name: MF Frequency
+    section: Mid
+    role: mf band centre frequency
+    unit: Hz
+    min: 100.0
+    max: 8000.0
+    default: 1000.0
+    taper: log
+    does: Sets the centre frequency of the MF peaking bell; log taper 100-8000 Hz.
+    musical_use: Park it on the region you want to lift or cut, e.g. body, boxiness, presence or air.
+    interactions:
+      - 'Has no audible effect while MF Gain is 0 dB: the band is bypassed (identity filter) when |gain|
+        <= 0.0001 dB.'
+      - Moving it does not change gain, only where the gain lands.
+    safe_range:
+      - 400.0
+      - 5000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:21
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:21
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:21
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:21
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:21
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:21
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:21
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:21
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:21
+        confidence: 0.92
+  - id: mid_gain
+    host_name: MF Gain
+    name: MF Gain
+    section: Mid
+    role: mf band boost/cut
+    unit: dB
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: Boost or cut of the MF peaking bell in dB; exactly 0 dB bypasses the band.
+    musical_use: Small moves (+-1 to 4 dB) are tonal shaping; larger cuts are corrective.
+    interactions:
+      - 'Interacts with MF Q: a higher Q narrows the affected region.'
+      - Adds to the overall level, so compensate with Output if boosting several bands.
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:22
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:22
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:22
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:22
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:22
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:22
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:22
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:22
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:22
+        confidence: 0.92
+  - id: mid_q
+    host_name: MF Q
+    name: MF Q
+    section: Mid
+    role: mf band width/slope
+    unit: none
+    min: 0.1
+    max: 10.0
+    default: 1.0
+    taper: log
+    does: Q (bandwidth) of the MF peaking bell; higher is narrower for a bell, steeper and with more overshoot
+      for a shelf.
+    musical_use: About 0.7-1 is broad and musical; 4+ for surgical cuts.
+    interactions:
+      - Only audible when MF Gain is non-zero.
+    safe_range:
+      - 0.5
+      - 4.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:23
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:23
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:23
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:23
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:23
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:23
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:23
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:23
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:23
+        confidence: 0.92
+  - id: high_mid_freq
+    host_name: HMF Freq
+    name: HMF Frequency
+    section: High-Mid
+    role: hmf band centre frequency
+    unit: Hz
+    min: 500.0
+    max: 20000.0
+    default: 4000.0
+    taper: log
+    does: Sets the centre frequency of the HMF peaking bell; log taper 500-20000 Hz.
+    musical_use: Park it on the region you want to lift or cut, e.g. body, boxiness, presence or air.
+    interactions:
+      - 'Has no audible effect while HMF Gain is 0 dB: the band is bypassed (identity filter) when |gain|
+        <= 0.0001 dB.'
+      - Moving it does not change gain, only where the gain lands.
+    safe_range:
+      - 1500.0
+      - 10000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:24
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:24
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:24
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:24
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:24
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:24
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:24
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:24
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:24
+        confidence: 0.92
+  - id: high_mid_gain
+    host_name: HMF Gain
+    name: HMF Gain
+    section: High-Mid
+    role: hmf band boost/cut
+    unit: dB
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: Boost or cut of the HMF peaking bell in dB; exactly 0 dB bypasses the band.
+    musical_use: Small moves (+-1 to 4 dB) are tonal shaping; larger cuts are corrective.
+    interactions:
+      - 'Interacts with HMF Q: a higher Q narrows the affected region.'
+      - Adds to the overall level, so compensate with Output if boosting several bands.
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:25
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:25
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:25
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:25
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:25
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:25
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:25
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:25
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:25
+        confidence: 0.92
+  - id: high_mid_q
+    host_name: HMF Q
+    name: HMF Q
+    section: High-Mid
+    role: hmf band width/slope
+    unit: none
+    min: 0.1
+    max: 10.0
+    default: 1.0
+    taper: log
+    does: Q (bandwidth) of the HMF peaking bell; higher is narrower for a bell, steeper and with more
+      overshoot for a shelf.
+    musical_use: About 0.7-1 is broad and musical; 4+ for surgical cuts.
+    interactions:
+      - Only audible when HMF Gain is non-zero.
+    safe_range:
+      - 0.5
+      - 4.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:26
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:26
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:26
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:26
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:26
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:26
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:26
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:26
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:26
+        confidence: 0.92
+  - id: high_shelf_freq
+    host_name: HF Freq
+    name: HF Frequency
+    section: High Shelf
+    role: hf shelf corner frequency
+    unit: Hz
+    min: 1000.0
+    max: 20000.0
+    default: 8000.0
+    taper: log
+    does: Sets the corner (midpoint) frequency of the HF shelf; log taper 1000-20000 Hz.
+    musical_use: Park it on the region you want to lift or cut, e.g. body, boxiness, presence or air.
+    interactions:
+      - 'Has no audible effect while HF Gain is 0 dB: the band is bypassed (identity filter) when |gain|
+        <= 0.0001 dB.'
+      - Moving it does not change gain, only where the gain lands.
+    safe_range:
+      - 4000.0
+      - 16000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:27
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:27
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:27
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:27
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:27
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:27
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:27
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:27
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:27
+        confidence: 0.92
+  - id: high_shelf_gain
+    host_name: HF Gain
+    name: HF Gain
+    section: High Shelf
+    role: hf band boost/cut
+    unit: dB
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: Boost or cut of the HF shelf in dB; exactly 0 dB bypasses the band.
+    musical_use: Small moves (+-1 to 4 dB) are tonal shaping; larger cuts are corrective.
+    interactions:
+      - 'Interacts with HF Q: a higher Q narrows the affected region.'
+      - Adds to the overall level, so compensate with Output if boosting several bands.
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:28
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:28
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:28
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:28
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:28
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:28
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:28
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:28
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:28
+        confidence: 0.92
+  - id: high_shelf_q
+    host_name: HF Q
+    name: HF Q
+    section: High Shelf
+    role: hf band width/slope
+    unit: none
+    min: 0.3
+    max: 2.0
+    default: 0.707
+    taper: log
+    does: Q (bandwidth) of the HF shelf; higher is narrower for a bell, steeper and with more overshoot
+      for a shelf.
+    musical_use: 0.707 is the smooth default; raise a little for a more pronounced shelf shoulder.
+    interactions:
+      - Only audible when HF Gain is non-zero.
+    safe_range:
+      - 0.5
+      - 1.2
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:29
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:29
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:29
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:29
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:29
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:29
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:29
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:29
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:29
+        confidence: 0.92
+  - id: lpf_on
+    host_name: LPF
+    name: LPF On
+    section: Low-Pass
+    role: low-pass filter enable
+    unit: bool
+    min: 0.0
+    max: 1.0
+    default: 0.0
+    taper: linear
+    does: Switches the low-pass filter on or off.
+    musical_use: Switch on to tame harsh top end or to push a sound back in the mix.
+    interactions:
+      - LPF Frequency and LPF Slope only matter while this is on.
+    safe_range:
+      - 0
+      - 1
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:30
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:30
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:30
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:30
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:30
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:30
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:30
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:30
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:30
+        confidence: 0.92
+  - id: lpf_freq
+    host_name: LPF Freq
+    name: LPF Frequency
+    section: Low-Pass
+    role: low-pass cutoff
+    unit: Hz
+    min: 1000.0
+    max: 20000.0
+    default: 18000.0
+    taper: log
+    does: Cutoff of the low-pass filter, log taper 1 kHz to 20 kHz.
+    musical_use: 8-12 kHz to dull a bright source; 16-18 kHz is nearly transparent.
+    interactions:
+      - Only audible when LPF On is on.
+    safe_range:
+      - 2000.0
+      - 20000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:31
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:31
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:31
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:31
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:31
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:31
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:31
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:31
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:31
+        confidence: 0.92
+  - id: lpf_slope
+    host_name: LPF Slope
+    name: LPF Slope
+    section: Low-Pass
+    role: low-pass steepness
+    unit: choice
+    min: 0.0
+    max: 3.0
+    default: 1.0
+    taper: linear
+    choices:
+      - 6 dB/oct
+      - 12 dB/oct
+      - 18 dB/oct
+      - 24 dB/oct
+    does: 'Selects the low-pass slope: 6, 12, 18 or 24 dB/oct (choice index 0..3).'
+    musical_use: 12 dB/oct is natural; 24 dB/oct for a firm band-limit.
+    interactions:
+      - Only audible when LPF On is on.
+      - Switching slope snaps the filter (no smoothing).
+    safe_range:
+      - 0
+      - 3
+    automatable: false
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:32
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:32
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:32
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:32
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      choices:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:32
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:32
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:32
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:32
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:32
+        confidence: 0.92
+  - id: output_gain
+    host_name: Output
+    name: Output Gain
+    section: Gain
+    role: post-EQ level trim
+    unit: dB
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: Gain applied after the EQ sections, in dB (summed with Input into one smoothed gain stage).
+    musical_use: Level-match the processed signal to the bypassed one when judging the EQ.
+    interactions:
+      - 'Adds to Input Gain: total gain is input + output.'
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:33
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:33
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:33
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:33
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:33
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:33
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:33
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:33
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/eq.rs:33
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/eq.rs:36
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/eq.rs:261
+    confidence: 0.95
+  modes:
+    source: source
+    ref: crates/dsp/src/plugins/eq.rs:72
+    confidence: 0.93
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0

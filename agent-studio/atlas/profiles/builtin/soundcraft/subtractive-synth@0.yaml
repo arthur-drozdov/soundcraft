@@ -1,0 +1,1411 @@
+identity:
+  name: Subtractive Synth
+  vendor: SoundCraft
+  format: builtin
+  plugin_id: subtractive_synth
+  version: 0.10.0
+  os:
+    - macos
+    - windows
+    - linux
+    - freebsd
+    - web
+  profiled: '2026-10-22'
+summary: '16-voice polyphonic subtractive synthesiser: two PolyBLEP oscillators (saw, square, sine or
+  triangle) with pitch and detune offset, a resonant 12 dB/oct state-variable low-pass with its own ADSR,
+  an amplitude ADSR, optional glide, velocity sensitivity, sustain pedal and +-2 semitone pitch bend.
+  Output is mono, copied to all channels.'
+signal_flow: 'Per voice: Osc 1 (waveform, note pitch) and Osc 2 (waveform, +Osc 2 Pitch semitones +Osc
+  2 Detune cents) mixed by Osc Mix (0% = Osc 1 only, 100% = Osc 2 only) -> low-pass SVF with cutoff =
+  Cutoff x 2^(6 octaves x Filter Env/100 x filter envelope), clamped to 20 Hz..0.45 x sample rate -> x
+  amp ADSR x velocity scale; voices summed x 0.3 -> Level -> all channels. Voice allocation reuses the
+  same note, then a free voice, then steals the quietest unheld voice. Reacts to MIDI sustain pedal (CC64),
+  all-notes-off, and pitch bend.'
+params:
+  - id: osc1_wave
+    host_name: Osc 1
+    name: Osc 1 Waveform
+    section: Oscillator 1
+    role: oscillator 1 waveform
+    unit: choice
+    min: 0.0
+    max: 3.0
+    default: 0.0
+    taper: linear
+    choices:
+      - Saw
+      - Square
+      - Sine
+      - Triangle
+    does: 'Waveform of oscillator 1: Saw, Square, Sine or Triangle (index 0..3).'
+    musical_use: Saw for bright leads/pads, Square for hollow tones, Sine for sub or pure tones.
+    interactions:
+      - Mixed with Osc 2 by Osc Mix; at 100% Osc Mix this oscillator is silent.
+    safe_range:
+      - 0
+      - 3
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:72
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:72
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:72
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:72
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      choices:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:72
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:72
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:72
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:72
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:72
+        confidence: 0.92
+  - id: osc2_wave
+    host_name: Osc 2
+    name: Osc 2 Waveform
+    section: Oscillator 2
+    role: oscillator 2 waveform
+    unit: choice
+    min: 0.0
+    max: 3.0
+    default: 0.0
+    taper: linear
+    choices:
+      - Saw
+      - Square
+      - Sine
+      - Triangle
+    does: 'Waveform of oscillator 2: Saw, Square, Sine or Triangle (index 0..3).'
+    musical_use: Choose a contrasting waveform for harmonic richness.
+    interactions:
+      - Silent at 0% Osc Mix.
+    safe_range:
+      - 0
+      - 3
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:73
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:73
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:73
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:73
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      choices:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:73
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:73
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:73
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:73
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:73
+        confidence: 0.92
+  - id: osc2_semitones
+    host_name: Osc 2 Pitch
+    name: Osc 2 Pitch
+    section: Oscillator 2
+    role: oscillator 2 coarse tuning
+    unit: semitones
+    min: -24.0
+    max: 24.0
+    default: 0.0
+    taper: linear
+    does: Pitch offset of oscillator 2 relative to the played note, -24 to +24 semitones.
+    musical_use: +12 or +7 for octave or fifth layering.
+    interactions:
+      - Combined with Osc 2 Detune.
+      - Silent at 0% Osc Mix.
+    safe_range:
+      - -12.0
+      - 12.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:74
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:74
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:74
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:74
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:74
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:74
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:74
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:74
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:74
+        confidence: 0.92
+  - id: osc2_detune
+    host_name: Osc 2 Detune
+    name: Osc 2 Detune
+    section: Oscillator 2
+    role: oscillator 2 fine tuning
+    unit: cents
+    min: -100.0
+    max: 100.0
+    default: 7.0
+    taper: linear
+    does: Fine pitch offset of oscillator 2, -100 to +100 cents (default +7).
+    musical_use: 5-15 cents for a thick, chorused sound.
+    interactions:
+      - Added to Osc 2 Pitch.
+      - Audible as beating only when Osc Mix is above 0 and both oscillators are similar.
+    safe_range:
+      - -30.0
+      - 30.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:75
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:75
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:75
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:75
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:75
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:75
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:75
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:75
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:75
+        confidence: 0.92
+  - id: osc_mix
+    host_name: Osc Mix
+    name: Osc Mix
+    section: Mixer
+    role: oscillator balance
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 50.0
+    taper: linear
+    does: 'Balance between the oscillators: 0% = oscillator 1 only, 100% = oscillator 2 only, 50% = equal.'
+    musical_use: 50% for layered sounds.
+    interactions:
+      - At the extremes one oscillator is silent and its Waveform/Pitch/Detune controls have no effect.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:76
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:76
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:76
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:76
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:76
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:76
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:76
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:76
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:76
+        confidence: 0.92
+  - id: cutoff
+    host_name: Cutoff
+    name: Cutoff
+    section: Filter
+    role: filter cutoff
+    unit: Hz
+    min: 20.0
+    max: 20000.0
+    default: 2000.0
+    taper: log
+    does: Base cutoff of the low-pass filter, 20 Hz-20 kHz (log); the envelope adds on top.
+    musical_use: Low cutoffs with envelope amount give plucks; high cutoffs leave the oscillator bright.
+    interactions:
+      - Effective cutoff = Cutoff x 2^(Filter Env x 6 octaves x envelope), clamped to 20 Hz..0.45 x sample
+        rate.
+      - Resonance emphasises the region around the cutoff.
+    safe_range:
+      - 100.0
+      - 12000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:77
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:77
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:77
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:77
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:77
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:77
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:77
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:77
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:77
+        confidence: 0.92
+  - id: resonance
+    host_name: Resonance
+    name: Resonance
+    section: Filter
+    role: filter resonance
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 20.0
+    taper: linear
+    does: Resonance of the low-pass (damping k = 2 - 1.95 x value); high values ring strongly near the
+      cutoff.
+    musical_use: 10-30% for body, 60%+ for squelchy or self-resonating sweeps.
+    interactions:
+      - Level near the cutoff rises with resonance; lower Level if clipping.
+    safe_range:
+      - 0.0
+      - 80.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:78
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:78
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:78
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:78
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:78
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:78
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:78
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:78
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:78
+        confidence: 0.92
+  - id: filter_env_amount
+    host_name: Filter Env
+    name: Filter Env Amount
+    section: Filter
+    role: filter envelope depth
+    unit: percent
+    min: -100.0
+    max: 100.0
+    default: 30.0
+    taper: linear
+    does: 'How far the filter envelope moves the cutoff: +-100% = +-6 octaves at full envelope; negative
+      inverts.'
+    musical_use: 30-70% for plucks and brass-like swells.
+    interactions:
+      - Envelope shape comes from Filter Attack/Decay/Sustain/Release.
+      - At 0% the filter envelope has no effect.
+    safe_range:
+      - -100.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:79
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:79
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:79
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:79
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:79
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:79
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:79
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:79
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:79
+        confidence: 0.92
+  - id: amp_attack
+    host_name: Amp Attack
+    name: Amp Attack
+    section: Amp Envelope
+    role: amplitude attack
+    unit: ms
+    min: 0.5
+    max: 5000.0
+    default: 5.0
+    taper: log
+    does: Linear rise time from silence to full level, 0.5 ms-5 s (log).
+    musical_use: Short for plucks and keys, long (200 ms+) for pads and swells.
+    interactions:
+      - Very short values can click on low notes.
+    safe_range:
+      - 0.5
+      - 2000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:80
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:80
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:80
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:80
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:80
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:80
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:80
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:80
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:80
+        confidence: 0.92
+  - id: amp_decay
+    host_name: Amp Decay
+    name: Amp Decay
+    section: Amp Envelope
+    role: amplitude decay
+    unit: ms
+    min: 1.0
+    max: 5000.0
+    default: 200.0
+    taper: log
+    does: 'Time to fall from peak toward the sustain level, 1 ms-5 s (log). Exponential decay and release:
+      the time is the time to fall 60 dB.'
+    musical_use: Short with low Sustain gives percussive notes.
+    interactions:
+      - Has no audible effect when Amp Sustain is 100%.
+    safe_range:
+      - 1.0
+      - 2000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:81
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:81
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:81
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:81
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:81
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:81
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:81
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:81
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:81
+        confidence: 0.92
+  - id: amp_sustain
+    host_name: Amp Sustain
+    name: Amp Sustain
+    section: Amp Envelope
+    role: amplitude sustain level
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 70.0
+    taper: linear
+    does: Level held while the key stays down, 0-100% of peak.
+    musical_use: 100% for organ-like notes; 0% for plucks that die away.
+    interactions:
+      - At 0% the note decays to silence regardless of key hold, so Release is irrelevant.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:82
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:82
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:82
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:82
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:82
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:82
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:82
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:82
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:82
+        confidence: 0.92
+  - id: amp_release
+    host_name: Amp Release
+    name: Amp Release
+    section: Amp Envelope
+    role: amplitude release
+    unit: ms
+    min: 1.0
+    max: 10000.0
+    default: 300.0
+    taper: log
+    does: 'Time to fall after key release, 1 ms-10 s (log). Exponential decay and release: the time is
+      the time to fall 60 dB.'
+    musical_use: Short for staccato; long for pads.
+    interactions:
+      - Also sets the tail length reported to the host.
+      - The sustain pedal delays the release start.
+    safe_range:
+      - 5.0
+      - 5000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:83
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:83
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:83
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:83
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:83
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:83
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:83
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:83
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:83
+        confidence: 0.92
+  - id: filter_attack
+    host_name: Filter Attack
+    name: Filter Attack
+    section: Filter Envelope
+    role: filter envelope attack
+    unit: ms
+    min: 0.5
+    max: 5000.0
+    default: 5.0
+    taper: log
+    does: Rise time of the filter envelope, 0.5 ms-5 s (log).
+    musical_use: Short for plucky brightness; long for gradual opening.
+    interactions:
+      - Only audible when Filter Env Amount is not 0.
+    safe_range:
+      - 0.5
+      - 2000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:84
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:84
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:84
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:84
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:84
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:84
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:84
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:84
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:84
+        confidence: 0.92
+  - id: filter_decay
+    host_name: Filter Decay
+    name: Filter Decay
+    section: Filter Envelope
+    role: filter envelope decay
+    unit: ms
+    min: 1.0
+    max: 5000.0
+    default: 300.0
+    taper: log
+    does: 'Time for the filter envelope to fall toward its sustain, 1 ms-5 s (log). Exponential decay
+      and release: the time is the time to fall 60 dB.'
+    musical_use: 100-400 ms gives the classic pluck.
+    interactions:
+      - Only audible when Filter Env Amount is not 0.
+    safe_range:
+      - 1.0
+      - 2000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:85
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:85
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:85
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:85
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:85
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:85
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:85
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:85
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:85
+        confidence: 0.92
+  - id: filter_sustain
+    host_name: Filter Sustain
+    name: Filter Sustain
+    section: Filter Envelope
+    role: filter envelope sustain
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 30.0
+    taper: linear
+    does: Level the filter envelope holds at while the key is down, 0-100%.
+    musical_use: 0-30% for decaying brightness.
+    interactions:
+      - Only audible when Filter Env Amount is not 0.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:86
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:86
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:86
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:86
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:86
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:86
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:86
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:86
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:86
+        confidence: 0.92
+  - id: filter_release
+    host_name: Filter Release
+    name: Filter Release
+    section: Filter Envelope
+    role: filter envelope release
+    unit: ms
+    min: 1.0
+    max: 10000.0
+    default: 300.0
+    taper: log
+    does: 'Release time of the filter envelope, 1 ms-10 s (log). Exponential decay and release: the time
+      is the time to fall 60 dB.'
+    musical_use: Match the amp release for a natural close.
+    interactions:
+      - Only audible when Filter Env Amount is not 0.
+    safe_range:
+      - 5.0
+      - 5000.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:87
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:87
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:87
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:87
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:87
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:87
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:87
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:87
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:87
+        confidence: 0.92
+  - id: glide
+    host_name: Glide
+    name: Glide
+    section: Performance
+    role: portamento time
+    unit: ms
+    min: 0.0
+    max: 1000.0
+    default: 0.0
+    taper: linear
+    does: Portamento time, 0-1000 ms; values below 0.5 ms disable glide (one-pole, about a third of the
+      value per time constant).
+    musical_use: 50-200 ms for slides between notes in basses and leads.
+    interactions:
+      - New notes slide from the last played pitch; with glide off every voice starts at its own pitch.
+    safe_range:
+      - 0.0
+      - 400.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:88
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:88
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:88
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:88
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:88
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:88
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:88
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:88
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:88
+        confidence: 0.92
+  - id: velocity
+    host_name: Velocity Sens
+    name: Velocity Sens
+    section: Performance
+    role: velocity sensitivity
+    unit: percent
+    min: 0.0
+    max: 100.0
+    default: 70.0
+    taper: linear
+    does: 'How much MIDI velocity affects loudness: gain = (1 - s) + s x velocity/127; 0% ignores velocity.'
+    musical_use: 70% (default) is natural; 0% for fixed-level step-sequenced parts.
+    interactions:
+      - Combined with the Level control.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:89
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:89
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:89
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:89
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:89
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:89
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:89
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:89
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:89
+        confidence: 0.92
+  - id: level
+    host_name: Level
+    name: Level
+    section: Output
+    role: output level
+    unit: dB
+    min: -48.0
+    max: 6.0
+    default: -6.0
+    taper: linear
+    does: Output level, -48 to +6 dB (default -6).
+    musical_use: Set for headroom; polyphonic chords add.
+    interactions:
+      - The voice sum is scaled by 0.3 before this stage; high resonance can still raise peaks.
+    safe_range:
+      - -24.0
+      - 0.0
+    automatable: true
+    provenance:
+      host_name:
+        source: host
+        confidence: 1.0
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:90
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:90
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:90
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:90
+        confidence: 0.97
+      min:
+        source: host
+        confidence: 1.0
+      max:
+        source: host
+        confidence: 1.0
+      default:
+        source: host
+        confidence: 1.0
+      taper:
+        source: host
+        confidence: 1.0
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:90
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:90
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:90
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:90
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/synth.rs:90
+        confidence: 0.92
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/synth.rs:93
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/synth.rs:464
+    confidence: 0.95
+  identity.format:
+    source: host
+    confidence: 1.0
+  identity.name:
+    source: host
+    confidence: 1.0
+  identity.os:
+    source: source
+    ref: AGENTS.md (SoundCraft runs on macOS, Windows, Linux, FreeBSD and the web)
+    confidence: 0.9
+  identity.plugin_id:
+    source: host
+    confidence: 1.0
+  identity.vendor:
+    source: host
+    confidence: 1.0
+  identity.version:
+    source: host
+    confidence: 1.0
