@@ -24,8 +24,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from . import yamlio
-from .patch import PARAM_FIELDS, PATCH_KEYS, PROVENANCE_KEYS, TOP_FIELDS
+from .patch import PARAM_FIELDS, PROVENANCE_KEYS, TOP_FIELDS, check_patch, load_patch
 from .profiles import load_profile, write_profile
 from .validate import Issue, ProfileError, check_profile
 
@@ -115,15 +114,11 @@ def merge_patch(profile: dict[str, Any], patch: Any, *, skip_conflicts: bool = F
     conflicting fields are left as they were and listed in ``MergeResult.conflicts``.
     """
     check_profile(profile)
+    shape = check_patch(patch)
+    if shape:
+        raise MergeError("invalid patch", shape)
     issues: list[Issue] = []
-    if not isinstance(patch, dict):
-        raise MergeError("invalid patch", [Issue("", "a patch must be a mapping")])
-    for key in sorted(set(patch) - PATCH_KEYS, key=str):
-        issues.append(Issue(str(key), "unknown patch key"))
     default = patch.get("default_provenance", {})
-    if not isinstance(default, dict):
-        issues.append(Issue("default_provenance", "must be a mapping"))
-        default = {}
 
     result = copy.deepcopy(profile)
     changes: list[Change] = []
@@ -139,45 +134,23 @@ def merge_patch(profile: dict[str, Any], patch: Any, *, skip_conflicts: bool = F
         prov_map[name] = dict(prov)
 
     top_overrides = patch.get("provenance", {})
-    if "provenance" in patch and not isinstance(top_overrides, dict):
-        issues.append(Issue("provenance", "must be a mapping"))
     for name in TOP_FIELDS:
         if name not in patch:
             continue
         prov = _provenance_for(name, default, top_overrides, "", issues)
         if prov is not None:
             apply(result, result.setdefault("provenance", {}), name, patch[name], prov, name)
-    for name in set(top_overrides if isinstance(top_overrides, dict) else {}) - set(TOP_FIELDS):
-        issues.append(Issue(f"provenance.{name}", "provenance for a field the patch does not set"))
 
     entries = patch.get("params", [])
-    if "params" in patch and not isinstance(entries, list):
-        issues.append(Issue("params", "must be a list"))
-        entries = []
     by_id = {_param_key(p["id"]): p for p in result["params"]}
-    seen: set[str] = set()
     for i, entry in enumerate(entries):
         here = f"params[{i}]"
-        if not isinstance(entry, dict) or "id" not in entry:
-            issues.append(Issue(here, "each param patch is a mapping with an `id`"))
-            continue
         key = _param_key(entry["id"])
-        if key in seen:
-            issues.append(Issue(f"{here}.id", f"param `{key}` appears twice in the patch"))
-            continue
-        seen.add(key)
         target = by_id.get(key)
         if target is None:
             issues.append(Issue(f"{here}.id", f"unknown param id `{key}` (patches change existing params; re-run the profiler to add new ones)"))
             continue
-        for bad in sorted(set(entry) - {"id", "provenance", *PARAM_FIELDS}, key=str):
-            issues.append(Issue(f"{here}.{bad}", "cannot be set by a patch"))
         overrides = entry.get("provenance", {})
-        if "provenance" in entry and not isinstance(overrides, dict):
-            issues.append(Issue(f"{here}.provenance", "must be a mapping"))
-            overrides = {}
-        for name in sorted(set(overrides) - {f for f in PARAM_FIELDS if f in entry}, key=str):
-            issues.append(Issue(f"{here}.provenance.{name}", "provenance for a field the patch does not set"))
         prov_map = target.setdefault("provenance", {}) if any(f in entry for f in PARAM_FIELDS) else {}
         for name in PARAM_FIELDS:
             if name not in entry:
@@ -211,9 +184,9 @@ def merge_files(
     """
     profile = load_profile(profile_path)
     try:
-        patch = yamlio.read_file(patch_path)
-    except yamlio.YamlError as exc:
-        raise MergeError("unreadable patch", [Issue("", str(exc))]) from exc
+        patch = load_patch(patch_path)
+    except ProfileError as exc:
+        raise MergeError(exc.label, exc.issues) from exc
     result = merge_patch(profile, patch, skip_conflicts=skip_conflicts)
     if dry_run:
         return result, None

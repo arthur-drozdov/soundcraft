@@ -101,6 +101,22 @@ def version_matches(profile: dict[str, Any], actual_version: str) -> bool:
     return version_status(profile["identity"]["version"], actual_version) == "exact"
 
 
+def version_check(profile: dict[str, Any], actual_version: str) -> dict[str, Any]:
+    """``{matches, profile_version, actual_version, status}`` for a profile vs the installed plugin.
+
+    ``matches`` is True only for an exact version match; ``status`` adds the finer
+    ``"exact"`` / ``"same-major"`` / ``"different"`` distinction.
+    """
+    profiled = profile["identity"]["version"]
+    status = version_status(profiled, actual_version)
+    return {
+        "matches": status == "exact",
+        "profile_version": profiled,
+        "actual_version": actual_version,
+        "status": status,
+    }
+
+
 # ---- ordering and file I/O --------------------------------------------------------
 
 

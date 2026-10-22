@@ -38,6 +38,7 @@ class ProfileError(Exception):
     """A profile, patch or merge was rejected. ``issues`` lists every problem found."""
 
     def __init__(self, message: str, issues: list[Issue] | None = None) -> None:
+        self.label = message
         self.issues = issues or []
         detail = "; ".join(str(i) for i in self.issues[:10])
         super().__init__(f"{message}: {detail}" if detail else message)

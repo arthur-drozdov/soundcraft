@@ -196,7 +196,7 @@ def _get_run(args: argparse.Namespace) -> int:
         print(f"no profile for {args.plugin_id} under {root}", file=sys.stderr)
         return 1
     if args.json:
-        print(json.dumps({"path": str(match.path), "version_match": match.version_match, "version_status": match.status, "profile": match.profile}, indent=2))
+        print(json.dumps({"path": str(match.path), "version_match": match.version_match, "version_status": match.status, "version": None if args.version is None else profiles.version_check(match.profile, args.version), "profile": match.profile}, indent=2))
     else:
         print(f"# {match.path}  version_status: {match.status}")
         print(profiles.dump_profile(match.profile), end="")
@@ -207,19 +207,25 @@ def _check_configure(p: argparse.ArgumentParser) -> None:
     _add_root(p)
     p.add_argument("--plugin", required=True, help="plugin id, e.g. vst3:ABCD...")
     p.add_argument("--version", required=True, help="the installed plugin version")
+    p.add_argument("--json", action="store_true", help="print {matches, profile_version, actual_version, status, path}")
 
 
 def _check_run(args: argparse.Namespace) -> int:
     match = profiles.find_profile(_root(args), args.plugin, args.version)
     if match is None:
-        print(f"{args.plugin}: no profile; profile it")
+        if args.json:
+            print(json.dumps({"matches": False, "profile_version": None, "actual_version": args.version, "status": "missing", "path": None}))
+        else:
+            print(f"{args.plugin}: no profile; profile it")
         return 1
-    have = match.profile["identity"]["version"]
-    if match.status == "exact":
-        print(f"{args.plugin}: profile matches version {have}")
-        return 0
-    print(f"{args.plugin}: profile is for {have} ({match.status}), plugin is {args.version}: re-profile")
-    return 1
+    check = profiles.version_check(match.profile, args.version)
+    if args.json:
+        print(json.dumps({**check, "path": str(match.path)}))
+    elif check["matches"]:
+        print(f"{args.plugin}: profile matches version {check['profile_version']}")
+    else:
+        print(f"{args.plugin}: profile is for {check['profile_version']} ({check['status']}), plugin is {args.version}: re-profile")
+    return 0 if check["matches"] else 1
 
 
 SUBCOMMANDS.update(
