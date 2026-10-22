@@ -1,0 +1,17 @@
+# Curated knowledge for the built-in plugin `invert` (patch for `atlas merge`).
+# Every value was read from utility.rs in crates/dsp; see README.md.
+default_provenance:
+  source: source
+  confidence: 0.95
+summary: 'Polarity inversion: multiplies every sample by -1. No parameters.'
+signal_flow: Input x -1 -> output.
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:257
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:285
+    confidence: 0.95
+params: []

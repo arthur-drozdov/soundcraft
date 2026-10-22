@@ -1,0 +1,120 @@
+# Curated knowledge for the built-in plugin `time_shift` (patch for `atlas merge`).
+# Every value was read from utility.rs in crates/dsp; see README.md.
+default_provenance:
+  source: source
+  confidence: 0.95
+summary: Sample-accurate delay of the signal by Delay (ms) plus Samples, up to 1 s plus 10000 samples;
+  changes crossfade over 256 samples. Not an AudioSuite (offline) plugin.
+signal_flow: Input -> delay line -> tap at (ms converted to samples + Samples) -> output. When the delay
+  changes the old and new taps crossfade over 256 samples. 100% wet.
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:46
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:116
+    confidence: 0.95
+params:
+  - id: delay_ms
+    name: Delay
+    section: Time
+    role: delay in milliseconds
+    unit: ms
+    does: Delay in ms, 0-1000.
+    musical_use: Use for timing alignment between mics or latency compensation by ear.
+    interactions:
+      - Total delay = Delay (ms) + Samples; capped by the internal buffer.
+      - No automatic compensation is reported to the host.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.92
+  - id: delay_samples
+    name: Samples
+    section: Time
+    role: delay in samples
+    unit: samples
+    does: Extra delay in whole samples, 0-10000.
+    musical_use: Fine alignment (e.g. 1-50 samples) between two microphones.
+    interactions:
+      - Added to Delay (ms).
+    safe_range:
+      - 0.0
+      - 2000.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:44
+        confidence: 0.92

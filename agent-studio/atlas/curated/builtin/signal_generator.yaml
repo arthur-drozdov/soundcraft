@@ -1,0 +1,189 @@
+# Curated knowledge for the built-in plugin `signal_generator` (patch for `atlas merge`).
+# Every value was read from utility.rs in crates/dsp; see README.md.
+default_provenance:
+  source: source
+  confidence: 0.95
+summary: 'Test-tone and noise generator that replaces its input with a sine, square, saw, triangle, white
+  noise or pink noise at a set level. Not a processor: input audio is discarded.'
+signal_flow: Oscillator (waveform at Frequency) x Level -> written identically to every output channel;
+  the incoming audio is ignored.
+modes:
+  - name: Sine
+    description: Generates a sine signal.
+  - name: Square
+    description: Generates a square signal.
+  - name: Saw
+    description: Generates a saw signal.
+  - name: Triangle
+    description: Generates a triangle signal.
+  - name: White Noise
+    description: Generates a white noise signal.
+  - name: Pink Noise
+    description: Generates a pink noise signal.
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:363
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:427
+    confidence: 0.95
+  modes:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:427
+    confidence: 0.93
+params:
+  - id: waveform
+    name: Waveform
+    section: Oscillator
+    role: waveform selector
+    unit: choice
+    does: Selects Sine, Square, Saw, Triangle, White Noise or Pink Noise (choice index 0..5).
+    musical_use: Sine for level and frequency checks; pink noise for system calibration.
+    interactions:
+      - Frequency is ignored for the noise waveforms.
+      - Switching waveform is abrupt; set it rather than ramp it.
+    safe_range:
+      - 0
+      - 5
+    automatable: false
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:358
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:358
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:358
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:358
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:358
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:358
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:358
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:358
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:358
+        confidence: 0.92
+  - id: freq
+    name: Frequency
+    section: Oscillator
+    role: oscillator frequency
+    unit: Hz
+    does: Oscillator frequency, 20 Hz-20 kHz (log), smoothed over 20 ms.
+    musical_use: 1 kHz is the standard reference tone.
+    interactions:
+      - Ignored for White Noise and Pink Noise.
+      - Square, Saw and Triangle are PolyBLEP band-limited, which reduces but does not eliminate aliasing
+        near the top of the range.
+    safe_range:
+      - 20.0
+      - 20000.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:359
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:359
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:359
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:359
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:359
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:359
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:359
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:359
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:359
+        confidence: 0.92
+  - id: level
+    name: Level
+    section: Output
+    role: output level
+    unit: dB
+    does: Output gain in dB, -96 (= -inf) to 0; default -20 dB.
+    musical_use: -18 dBFS is a common alignment level.
+    interactions:
+      - The output is the generator only; incoming audio is discarded.
+    safe_range:
+      - -60.0
+      - 0.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:360
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:360
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:360
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:360
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:360
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:360
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:360
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:360
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:360
+        confidence: 0.92

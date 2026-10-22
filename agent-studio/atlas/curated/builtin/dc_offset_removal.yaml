@@ -1,0 +1,69 @@
+# Curated knowledge for the built-in plugin `dc_offset_removal` (patch for `atlas merge`).
+# Every value was read from utility.rs in crates/dsp; see README.md.
+default_provenance:
+  source: source
+  confidence: 0.95
+summary: One-pole DC-blocking high-pass filter that removes constant offset and sub-sonic drift.
+signal_flow: Input -> one-pole DC blocker at Cutoff -> output (non-finite input samples are treated as
+  0).
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:296
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:342
+    confidence: 0.95
+params:
+  - id: cutoff
+    name: Cutoff
+    section: Filter
+    role: DC blocker corner
+    unit: Hz
+    does: Corner frequency of the DC blocker, 1-40 Hz (log).
+    musical_use: 5 Hz (default) removes DC without touching audible bass; raise toward 20-30 Hz for subsonic
+      rumble.
+    interactions:
+      - Higher cutoffs begin to thin out the lowest bass.
+    safe_range:
+      - 2.0
+      - 20.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:294
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:294
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:294
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:294
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:294
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:294
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:294
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:294
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:294
+        confidence: 0.92

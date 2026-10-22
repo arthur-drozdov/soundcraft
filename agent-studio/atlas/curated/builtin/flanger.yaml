@@ -1,0 +1,270 @@
+# Curated knowledge for the built-in plugin `flanger` (patch for `atlas merge`).
+# Every value was read from modulation.rs in crates/dsp; see README.md.
+default_provenance:
+  source: source
+  confidence: 0.95
+summary: 'Stereo flanger: a very short delay (0.1-10 ms) swept by a sine LFO from (1 - Depth) x Delay
+  up to Delay, with bipolar feedback for comb-filter resonances.'
+signal_flow: Input -> delay line read at Delay x (1 - Depth x 0.5 x (1 - sin)) (cubic interpolation, minimum
+  0.05 ms) -> mixed with dry (Mix); the delayed output feeds back (Feedback, can be negative). Right channel
+  LFO offset by a quarter cycle (fixed).
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/modulation.rs:178
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/modulation.rs:288
+    confidence: 0.95
+params:
+  - id: rate
+    name: Rate
+    section: Modulation
+    role: LFO rate
+    unit: Hz
+    does: LFO speed, 0.02-5 Hz (log).
+    musical_use: 0.1-0.5 Hz for slow jet sweeps.
+    interactions:
+      - Faster rates sound like warble.
+    safe_range:
+      - 0.05
+      - 2.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:171
+        confidence: 0.92
+  - id: depth
+    name: Depth
+    section: Modulation
+    role: sweep depth
+    unit: percent
+    does: Fraction of the delay that is swept; at 100% the delay sweeps from 0 up to Delay.
+    musical_use: 50-80% for dramatic sweeps.
+    interactions:
+      - 'Sweep range is relative to Delay: depth x delay.'
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:172
+        confidence: 0.92
+  - id: delay
+    name: Delay
+    section: Delay
+    role: maximum delay
+    unit: ms
+    does: Upper end of the swept delay time, 0.1-10 ms.
+    musical_use: 1-4 ms for classic flanging.
+    interactions:
+      - Sets the lowest comb notch frequency (about 1/(2 x delay)).
+    safe_range:
+      - 0.5
+      - 8.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:173
+        confidence: 0.92
+  - id: feedback
+    name: Feedback
+    section: Delay
+    role: regeneration
+    unit: percent
+    does: Feedback amount, -95 to +95%; negative inverts polarity for a hollow, metallic sound.
+    musical_use: 40-70% for strong flange; negative for a different spectrum.
+    interactions:
+      - High magnitude values ring strongly and can exceed the input level.
+    safe_range:
+      - -80.0
+      - 80.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:174
+        confidence: 0.92
+  - id: mix
+    name: Mix
+    section: Output
+    role: dry/wet blend
+    unit: percent
+    does: Linear dry/wet blend.
+    musical_use: 50% gives deepest notches.
+    interactions:
+      - At 50% with positive feedback, notches are deepest.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:175
+        confidence: 0.92

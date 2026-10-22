@@ -1,0 +1,432 @@
+# Curated knowledge for the built-in plugin `plate_reverb` (patch for `atlas merge`).
+# Every value was read from reverb.rs in crates/dsp; see README.md.
+default_provenance:
+  source: source
+  confidence: 0.95
+summary: 'Plate Reverb: an 8-line feedback delay network reverb tuned to shorter, denser delays (14-40
+  ms base lines) for a bright, dense plate-like wash, 1.1 Hz modulation. Defaults: Mix 30%, Pre-Delay
+  20 ms, Decay 2.5 s, Damping 10 kHz, Diffusion 85%.'
+signal_flow: Per-side pre-delay (up to 250 ms) -> 4 Schroeder allpass diffusers (coefficient 0.7 x Diffusion)
+  -> 8 delay lines mixed by an orthogonal Hadamard matrix with per-line RT60 gains and an in-loop one-pole
+  HF damping filter, lines gently modulated -> wet taps combined to left/right -> low-cut high-pass ->
+  mid/side width -> linear dry/wet mix. A mono input is fed to both sides and the wet output is the mid
+  signal.
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/reverb.rs:60
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/reverb.rs:264
+    confidence: 0.95
+params:
+  - id: mix
+    name: Mix
+    section: Output
+    role: dry/wet blend
+    unit: percent
+    does: Blend of dry (0) and reverb (100) signal; linear crossfade.
+    musical_use: 10-25% for subtle ambience on a track; 100% when used on an aux/send.
+    interactions:
+      - On a send/aux use 100%; on an insert, higher values push the source back in the mix.
+    safe_range:
+      - 0.0
+      - 60.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:35
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:35
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:35
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:35
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:35
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:35
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:35
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:35
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:35
+        confidence: 0.92
+  - id: pre_delay
+    name: Pre-Delay
+    section: Early
+    role: pre-delay
+    unit: ms
+    does: Delay before the signal enters the reverb, 0-250 ms (smoothed over 100 ms).
+    musical_use: 20-40 ms keeps vocals and snares clear of the tail; tempo-matched values add rhythm.
+    interactions:
+      - Adds to the tail length reported to the host.
+      - Changing it on playing audio sweeps the delay and can produce pitch artefacts.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:36
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:36
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:36
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:36
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:36
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:36
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:36
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:36
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:36
+        confidence: 0.92
+  - id: decay
+    name: Decay
+    section: Tail
+    role: reverb time (RT60)
+    unit: seconds
+    does: Target time for the tail to fall 60 dB, 0.1-20 s (log).
+    musical_use: 1.5-3 s for plates; longer values for effect spaces.
+    interactions:
+      - 'RT60 is held when Size changes: per-line feedback gains are recomputed from the scaled delay
+        lengths.'
+      - Long decays with high Mix wash out dense material.
+    safe_range:
+      - 0.2
+      - 6.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:37
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:37
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:37
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:37
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:37
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:37
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:37
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:37
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:37
+        confidence: 0.92
+  - id: size
+    name: Size
+    section: Tail
+    role: room/plate size
+    unit: percent
+    does: Scales all internal delay-line lengths from 0.35x (0%) to 1.6x (100%); also changes echo density
+      and modal character.
+    musical_use: Small for tight ambience; large for hall-like spaciousness.
+    interactions:
+      - 'Smoothed over 200 ms: automating or changing it live makes the tail glide and sound pitch-shifted.'
+      - Decay gains are recomputed so RT60 is held across Size changes.
+    safe_range:
+      - 10.0
+      - 90.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:38
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:38
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:38
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:38
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:38
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:38
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:38
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:38
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:38
+        confidence: 0.92
+  - id: damping
+    name: HF Damping
+    section: Tail
+    role: high-frequency damping
+    unit: Hz
+    does: Cutoff of a one-pole low-pass inside the feedback loop, 1-20 kHz (log); lower values make the
+      tail darker and shorter in the highs.
+    musical_use: 4-8 kHz for natural rooms; 10 kHz+ for bright plates.
+    interactions:
+      - 'Interacts with Decay: low damping frequencies make high frequencies die faster than the nominal
+        RT60.'
+    safe_range:
+      - 2000.0
+      - 20000.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:39
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:39
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:39
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:39
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:39
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:39
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:39
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:39
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:39
+        confidence: 0.92
+  - id: diffusion
+    name: Diffusion
+    section: Early
+    role: input diffusion
+    unit: percent
+    does: Allpass coefficient of the four input diffusers (0.7 x value/100); higher smears transients
+      into a smoother, denser build-up.
+    musical_use: High for smooth vocals/plates; lower keeps drum attacks defined and audible echoes.
+    interactions:
+      - At 0% the diffusers pass the signal unchanged, so discrete echoes of the delay lines can become
+        audible.
+    safe_range:
+      - 30.0
+      - 100.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:40
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:40
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:40
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:40
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:40
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:40
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:40
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:40
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:40
+        confidence: 0.92
+  - id: width
+    name: Width
+    section: Output
+    role: stereo width
+    unit: percent
+    does: 'Scales the side component of the wet signal: 0% is mono, 100% full stereo.'
+    musical_use: Reduce for mono-compatible mixes.
+    interactions:
+      - Has no effect on a mono track.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:41
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:41
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:41
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:41
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:41
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:41
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:41
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:41
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:41
+        confidence: 0.92
+  - id: low_cut
+    name: Low Cut
+    section: Output
+    role: wet high-pass
+    unit: Hz
+    does: Cutoff of a 12 dB/oct high-pass applied to the wet signal only, 20 Hz-1 kHz (log).
+    musical_use: 100-300 Hz keeps low-end reverb from muddying the mix.
+    interactions:
+      - Does not touch the dry signal.
+    safe_range:
+      - 20.0
+      - 500.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:42
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:42
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:42
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:42
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:42
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:42
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:42
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:42
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/reverb.rs:42
+        confidence: 0.92

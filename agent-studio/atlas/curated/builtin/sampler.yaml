@@ -1,0 +1,1014 @@
+# Curated knowledge for the built-in plugin `sampler` (patch for `atlas merge`).
+# Every value was read from sampler.rs in crates/dsp; see README.md.
+default_provenance:
+  source: source
+  confidence: 0.95
+summary: 32-voice sampler that plays one loaded sample across the keyboard (cubic interpolation, also
+  converting the sample's own rate to the host rate), with key and velocity ranges, amplitude ADSR, velocity
+  sensitivity, sample start, forward or ping-pong looping, and gate or one-shot playback. Silent until
+  the host loads a sample.
+signal_flow: 'Note-on (inside the key and velocity ranges) -> voice reads the sample from Sample Start
+  at a rate of 2^((note - Root Note + Transpose + Fine/100)/12) (without Key Tracking: Transpose + Fine
+  only) -> 4-point cubic interpolation -> x amp ADSR x velocity gain x Level -> summed into all channels
+  (mono samples are copied to both, stereo samples keep L/R). Sustain pedal and pitch bend are ignored.'
+modes:
+  - name: Gate
+    description: 'Play Mode Gate: a note plays while the key is held and its envelope releases on note-off.'
+  - name: One Shot
+    description: 'Play Mode One Shot: the sample plays through regardless of note-off; only the sample
+      end (or all-notes-off) ends the voice.'
+  - name: Loop Off
+    description: Plays the sample once and stops at its end.
+  - name: Loop Forward
+    description: Loops between Loop Start and Loop End, always playing forwards.
+  - name: Loop Ping-Pong
+    description: Loops between Loop Start and Loop End, reversing direction at each edge.
+ui_only:
+  - feature: Sample assignment
+    procedure: 'The sample is not a plugin parameter: load an audio file with the command mix.sampler_load
+      {track, path} (or the Sampler window); the host passes it to the plugin with set_sample. Multi-zone
+      maps are set with mix.sampler_zones_set.'
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/sampler.rs:61
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/sampler.rs:391
+    confidence: 0.95
+  modes:
+    source: source
+    ref: crates/dsp/src/plugins/sampler.rs:76
+    confidence: 0.93
+  ui_only:
+    source: source
+    ref: crates/engine/src/cmd/sampler.rs:22
+    confidence: 0.9
+params:
+  - id: root_note
+    name: Root Note
+    section: Tuning
+    role: sample root key
+    unit: MIDI note
+    does: MIDI note (0-127) at which the sample plays at its original pitch; default 60 (middle C).
+    musical_use: Set to the note the sample was recorded at.
+    interactions:
+      - Ignored while Key Tracking is off.
+      - Latched at note-on.
+    safe_range:
+      - 0
+      - 127
+    automatable: false
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:40
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:40
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:40
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:40
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:40
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:40
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:40
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:40
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:40
+        confidence: 0.92
+  - id: transpose
+    name: Transpose
+    section: Tuning
+    role: coarse transposition
+    unit: semitones
+    does: Transposes playback by -48 to +48 semitones.
+    musical_use: Octave shifts for layering or special effects.
+    interactions:
+      - Applies with or without Key Tracking.
+      - Latched at note-on.
+    safe_range:
+      - -24.0
+      - 24.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:41
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:41
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:41
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:41
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:41
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:41
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:41
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:41
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:41
+        confidence: 0.92
+  - id: fine_tune
+    name: Fine Tune
+    section: Tuning
+    role: fine transposition
+    unit: cents
+    does: Fine pitch offset, -100 to +100 cents.
+    musical_use: Small detune for realism.
+    interactions:
+      - Added to Transpose.
+      - Latched at note-on.
+    safe_range:
+      - -50.0
+      - 50.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:42
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:42
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:42
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:42
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:42
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:42
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:42
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:42
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:42
+        confidence: 0.92
+  - id: key_track
+    name: Key Tracking
+    section: Tuning
+    role: keyboard pitch tracking
+    unit: bool
+    does: 'On: pitch follows the played key relative to the Root Note; off: every key plays the sample
+      at its original pitch (plus Transpose/Fine).'
+    musical_use: Turn off for drum hits and one-shots.
+    interactions:
+      - Root Note has no effect when off.
+      - Latched at note-on.
+    safe_range:
+      - 0
+      - 1
+    automatable: false
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:43
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:43
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:43
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:43
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:43
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:43
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:43
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:43
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:43
+        confidence: 0.92
+  - id: key_low
+    name: Lowest Key
+    section: Zone
+    role: lowest playable key
+    unit: MIDI note
+    does: Lowest MIDI note that triggers the sample, 0-127; keys outside the range are ignored.
+    musical_use: Split the keyboard when layering instruments.
+    interactions:
+      - If Lowest Key is above Highest Key the two are swapped.
+      - Latched at note-on.
+    safe_range:
+      - 0
+      - 127
+    automatable: false
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:44
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:44
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:44
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:44
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:44
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:44
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:44
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:44
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:44
+        confidence: 0.92
+  - id: key_high
+    name: Highest Key
+    section: Zone
+    role: highest playable key
+    unit: MIDI note
+    does: Highest MIDI note that triggers the sample, 0-127.
+    musical_use: Split the keyboard when layering instruments.
+    interactions:
+      - If below Lowest Key the two are swapped.
+      - Latched at note-on.
+    safe_range:
+      - 0
+      - 127
+    automatable: false
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:45
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:45
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:45
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:45
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:45
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:45
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:45
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:45
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:45
+        confidence: 0.92
+  - id: vel_low
+    name: Lowest Velocity
+    section: Zone
+    role: lowest accepted velocity
+    unit: MIDI velocity
+    does: Lowest MIDI velocity (1-127) that triggers the sample.
+    musical_use: Velocity-split layers.
+    interactions:
+      - If above Highest Velocity the two are swapped.
+      - Latched at note-on.
+    safe_range:
+      - 1
+      - 127
+    automatable: false
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:46
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:46
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:46
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:46
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:46
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:46
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:46
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:46
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:46
+        confidence: 0.92
+  - id: vel_high
+    name: Highest Velocity
+    section: Zone
+    role: highest accepted velocity
+    unit: MIDI velocity
+    does: Highest MIDI velocity (1-127) that triggers the sample.
+    musical_use: Velocity-split layers.
+    interactions:
+      - If below Lowest Velocity the two are swapped.
+      - Latched at note-on.
+    safe_range:
+      - 1
+      - 127
+    automatable: false
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:47
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:47
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:47
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:47
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:47
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:47
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:47
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:47
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:47
+        confidence: 0.92
+  - id: velocity
+    name: Velocity Sens
+    section: Amp
+    role: velocity sensitivity
+    unit: percent
+    does: 'How much velocity affects loudness: gain = (1 - s) + s x velocity/127; 0% ignores velocity.'
+    musical_use: 70% default; 0% for fixed-level triggers.
+    interactions:
+      - Latched at note-on.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:48
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:48
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:48
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:48
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:48
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:48
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:48
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:48
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:48
+        confidence: 0.92
+  - id: attack
+    name: Attack
+    section: Amp Envelope
+    role: amplitude attack
+    unit: ms
+    does: Linear rise time, 0.1 ms-5 s (log).
+    musical_use: Short for percussive samples; long for pad-like swells.
+    interactions:
+      - Very short values can leave a click if the sample starts at a non-zero value.
+    safe_range:
+      - 0.1
+      - 2000.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:49
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:49
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:49
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:49
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:49
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:49
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:49
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:49
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:49
+        confidence: 0.92
+  - id: decay
+    name: Decay
+    section: Amp Envelope
+    role: amplitude decay
+    unit: ms
+    does: Time to fall toward the sustain level, 1 ms-10 s (log); 60 dB exponential.
+    musical_use: Combine with Sustain below 100% to shorten notes.
+    interactions:
+      - No audible effect when Sustain is 100%.
+    safe_range:
+      - 1.0
+      - 5000.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:50
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:50
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:50
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:50
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:50
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:50
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:50
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:50
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:50
+        confidence: 0.92
+  - id: sustain
+    name: Sustain
+    section: Amp Envelope
+    role: amplitude sustain level
+    unit: percent
+    does: Level held while the key is down, 0-100% (default 100).
+    musical_use: 100% keeps the sample at full level for its duration.
+    interactions:
+      - At 0% the note decays to silence even while held.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:51
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:51
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:51
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:51
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:51
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:51
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:51
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:51
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:51
+        confidence: 0.92
+  - id: release
+    name: Release
+    section: Amp Envelope
+    role: amplitude release
+    unit: ms
+    does: Release time after note-off, 1 ms-10 s (log).
+    musical_use: Short for tight playing; longer to smooth note ends.
+    interactions:
+      - Does not apply in One Shot mode (note-off is ignored) except via all-notes-off.
+      - Also sets the tail length reported to the host.
+    safe_range:
+      - 5.0
+      - 3000.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:52
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:52
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:52
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:52
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:52
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:52
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:52
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:52
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:52
+        confidence: 0.92
+  - id: play_mode
+    name: Play Mode
+    section: Playback
+    role: gate or one-shot
+    unit: choice
+    does: 'Gate (0): plays while the key is held; One Shot (1): plays through the whole sample regardless
+      of note-off.'
+    musical_use: One Shot for drum hits; Gate for sustained instruments.
+    interactions:
+      - In One Shot mode retriggering the same note stacks voices instead of releasing the earlier one.
+      - Release has no effect in One Shot mode.
+    safe_range:
+      - 0
+      - 1
+    automatable: false
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:53
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:53
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:53
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:53
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:53
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:53
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:53
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:53
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:53
+        confidence: 0.92
+  - id: start
+    name: Sample Start
+    section: Playback
+    role: playback start offset
+    unit: percent
+    does: Start position as a percentage of the sample length, 0-100%.
+    musical_use: Skip silence or a pre-roll at the start of a sample.
+    interactions:
+      - Latched at note-on.
+      - A loop only applies if the start is before the loop end.
+    safe_range:
+      - 0.0
+      - 90.0
+    automatable: false
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:54
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:54
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:54
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:54
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:54
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:54
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:54
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:54
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:54
+        confidence: 0.92
+  - id: loop_mode
+    name: Loop
+    section: Loop
+    role: loop type
+    unit: choice
+    does: Off (0), Forward (1) or Ping-Pong (2) looping between Loop Start and Loop End.
+    musical_use: Loop sustained instrument samples; leave off for one-shots.
+    interactions:
+      - Loop Start and Loop End only matter when looping is on.
+      - The loop is ignored if the region is shorter than one frame.
+    safe_range:
+      - 0
+      - 2
+    automatable: false
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:55
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:55
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:55
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:55
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:55
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:55
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:55
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:55
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:55
+        confidence: 0.92
+  - id: loop_start
+    name: Loop Start
+    section: Loop
+    role: loop start
+    unit: percent
+    does: Start of the loop region as a percentage of the sample, 0-100%.
+    musical_use: Choose a zero-crossing-aligned point after the attack.
+    interactions:
+      - If after Loop End the two are swapped.
+      - Only matters when Loop is not Off.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:56
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:56
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:56
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:56
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:56
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:56
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:56
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:56
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:56
+        confidence: 0.92
+  - id: loop_end
+    name: Loop End
+    section: Loop
+    role: loop end
+    unit: percent
+    does: End of the loop region as a percentage of the sample, 0-100% (default 100).
+    musical_use: Set to just before any decay or noise tail.
+    interactions:
+      - If before Loop Start the two are swapped.
+      - Only matters when Loop is not Off.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:57
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:57
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:57
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:57
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:57
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:57
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:57
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:57
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:57
+        confidence: 0.92
+  - id: level
+    name: Level
+    section: Output
+    role: output level
+    unit: dB
+    does: Output level, -48 to +12 dB.
+    musical_use: Match to other instruments.
+    interactions:
+      - The voice sum is not limited, so many layered voices can exceed full scale.
+    safe_range:
+      - -24.0
+      - 6.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:58
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:58
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:58
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:58
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:58
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:58
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:58
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:58
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/sampler.rs:58
+        confidence: 0.92

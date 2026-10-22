@@ -1,0 +1,117 @@
+# Curated knowledge for the built-in plugin `trim` (patch for `atlas merge`).
+# Every value was read from utility.rs in crates/dsp; see README.md.
+default_provenance:
+  source: source
+  confidence: 0.95
+summary: Gain trim from -inf to +12 dB with a polarity (phase invert) switch, smoothed over 10 ms.
+signal_flow: Input x (+1 or -1) x linear gain (smoothed) -> output.
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:202
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:250
+    confidence: 0.95
+params:
+  - id: gain
+    name: Trim
+    section: Level
+    role: trim gain
+    unit: dB
+    does: Gain in dB, -96 (= -inf) to +12.
+    musical_use: Set levels into other processors.
+    interactions:
+      - -96 dB mutes the signal.
+    safe_range:
+      - -24.0
+      - 12.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.92
+  - id: invert
+    name: Phase Invert
+    section: Polarity
+    role: polarity switch
+    unit: bool
+    does: Inverts the signal's polarity.
+    musical_use: Fix phase between two mics on the same source (e.g. snare top/bottom).
+    interactions:
+      - Polarity change is smoothed with the gain over 10 ms.
+    safe_range:
+      - 0
+      - 1
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:200
+        confidence: 0.92

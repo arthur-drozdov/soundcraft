@@ -1,0 +1,331 @@
+# Curated knowledge for the built-in plugin `expander_gate` (patch for `atlas merge`).
+# Every value was read from dynamics.rs in crates/dsp; see README.md.
+default_provenance:
+  source: source
+  confidence: 0.95
+summary: Stereo-linked downward expander / noise gate with ratio, range, attack, hold and release.
+signal_flow: 'Detector = loudest channel''s absolute sample with a 5 ms peak-hold decay -> level in dB
+  vs Threshold: below it, gain reduction = (Threshold - level) x (Ratio - 1), capped at Range -> hold
+  timer keeps the gate open Hold ms after the level last exceeded Threshold -> attack (opening) / release
+  (closing) smoothing -> same gain applied to all channels. No sidechain filter and no lookahead.'
+modes:
+  - name: Gate
+    description: 'High ratio (default 100:1) and large range: closes fully below threshold.'
+  - name: Expander
+    description: 'Low ratio (e.g. 2:1) and/or small range: gentle downward expansion that lowers noise
+      without chatter.'
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/dynamics.rs:212
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/dynamics.rs:310
+    confidence: 0.95
+  modes:
+    source: source
+    ref: crates/dsp/src/plugins/dynamics.rs:271
+    confidence: 0.93
+params:
+  - id: threshold
+    name: Threshold
+    section: Detector
+    role: gate open threshold
+    unit: dB
+    does: Level below which the signal is attenuated, -80 to 0 dB.
+    musical_use: Set just above the noise floor/bleed level and below the wanted signal's quiet parts.
+    interactions:
+      - Too high chops note tails; Hold and Release determine how tails survive.
+    safe_range:
+      - -70.0
+      - -20.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:204
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:204
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:204
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:204
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:204
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:204
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:204
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:204
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:204
+        confidence: 0.92
+  - id: ratio
+    name: Ratio
+    section: Gain Computer
+    role: expansion ratio
+    unit: ratio
+    does: Expansion ratio, log taper 1:1 to 100:1; reduction in dB grows by (ratio-1) per dB below threshold.
+    musical_use: 100:1 is a hard gate; 2:1-4:1 is a soft expander.
+    interactions:
+      - At 1:1 no expansion happens regardless of other settings.
+      - Range limits the maximum reduction.
+    safe_range:
+      - 1.5
+      - 100.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:205
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:205
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:205
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:205
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:205
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:205
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:205
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:205
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:205
+        confidence: 0.92
+  - id: range
+    name: Range
+    section: Gain Computer
+    role: maximum attenuation
+    unit: dB
+    does: Maximum gain reduction when closed, 0 to 80 dB.
+    musical_use: 10-20 dB for subtle bleed reduction; 80 dB for a full mute.
+    interactions:
+      - 0 dB disables the gate effect entirely.
+    safe_range:
+      - 0.0
+      - 80.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:206
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:206
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:206
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:206
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:206
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:206
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:206
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:206
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:206
+        confidence: 0.92
+  - id: attack
+    name: Attack
+    section: Ballistics
+    role: opening time
+    unit: ms
+    does: One-pole time constant for the gate to open, 0.01-100 ms.
+    musical_use: Short (<1 ms) keeps drum transients; longer smooths the onset.
+    interactions:
+      - The gate has no lookahead, so a slow attack softens the start of sounds.
+    safe_range:
+      - 0.01
+      - 20.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:207
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:207
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:207
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:207
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:207
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:207
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:207
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:207
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:207
+        confidence: 0.92
+  - id: hold
+    name: Hold
+    section: Ballistics
+    role: hold time
+    unit: ms
+    does: Time the gate stays open after the level last exceeded the threshold, 0-2000 ms.
+    musical_use: 50-200 ms stops flutter on decaying hits.
+    interactions:
+      - Release starts only after Hold has run out.
+    safe_range:
+      - 0.0
+      - 500.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:208
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:208
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:208
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:208
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:208
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:208
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:208
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:208
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:208
+        confidence: 0.92
+  - id: release
+    name: Release
+    section: Ballistics
+    role: closing time
+    unit: ms
+    does: One-pole time constant for the gate to close, 1 ms to 4 s.
+    musical_use: 'Match the natural decay of the source: short for tight drums, long for sustained notes.'
+    interactions:
+      - Longer release lets more bleed through after the hit.
+    safe_range:
+      - 10.0
+      - 1000.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:209
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:209
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:209
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:209
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:209
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:209
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:209
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:209
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/dynamics.rs:209
+        confidence: 0.92

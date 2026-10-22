@@ -1,0 +1,130 @@
+# Curated knowledge for the built-in plugin `dither` (patch for `atlas merge`).
+# Every value was read from utility.rs in crates/dsp; see README.md.
+default_provenance:
+  source: source
+  confidence: 0.95
+summary: TPDF dither with requantisation to 16, 20 or 24 bits and optional first-order noise shaping.
+  Digital silence stays silent.
+signal_flow: 'Input -> (optional error feedback: x - previous error) -> add triangular (TPDF) dither of
+  +-1 LSB -> round to the 2^(1 - bits) grid -> clamp to the legal range. Exact zeros bypass quantisation.'
+modes:
+  - name: Flat TPDF
+    description: 'Noise Shaping off: plain triangular dither.'
+  - name: Noise-shaped
+    description: 'Noise Shaping on: first-order error feedback pushes quantisation noise toward higher
+      frequencies.'
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:448
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:491
+    confidence: 0.95
+  modes:
+    source: source
+    ref: crates/dsp/src/plugins/utility.rs:491
+    confidence: 0.93
+params:
+  - id: bits
+    name: Bit Depth
+    section: Requantise
+    role: target word length
+    unit: choice
+    does: 'Target bit depth: 16, 20 or 24 (choice index 0..2).'
+    musical_use: 16 for CD-format masters; leave the plugin last in the chain.
+    interactions:
+      - Should be the last processor; any later gain change defeats the dithering.
+      - Selecting 24 gives noise far below audibility.
+    safe_range:
+      - 0
+      - 2
+    automatable: false
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.92
+  - id: noise_shaping
+    name: Noise Shaping
+    section: Requantise
+    role: noise-shaping enable
+    unit: bool
+    does: Enables first-order error-feedback noise shaping.
+    musical_use: Slightly reduces audible noise in the midrange for 16-bit output.
+    interactions:
+      - Raises noise at high frequencies.
+    safe_range:
+      - 0
+      - 1
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/utility.rs:446
+        confidence: 0.92

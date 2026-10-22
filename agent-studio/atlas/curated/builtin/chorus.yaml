@@ -1,0 +1,321 @@
+# Curated knowledge for the built-in plugin `chorus` (patch for `atlas merge`).
+# Every value was read from modulation.rs in crates/dsp; see README.md.
+default_provenance:
+  source: source
+  confidence: 0.95
+summary: 'Stereo chorus: a short delay line (5-30 ms base) swept by a sine LFO by up to 6 ms, mixed with
+  the dry signal; optional feedback and stereo phase spread.'
+signal_flow: Input -> short delay line read at Delay + Depth x 6 ms x (0.5 + 0.5 sin) (cubic interpolation)
+  -> mixed with dry (Mix). Feedback re-injects the delayed signal. The right channel's LFO is offset by
+  up to a quarter cycle (Spread).
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/modulation.rs:160
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/modulation.rs:288
+    confidence: 0.95
+params:
+  - id: rate
+    name: Rate
+    section: Modulation
+    role: LFO rate
+    unit: Hz
+    does: LFO speed, 0.05-5 Hz (log).
+    musical_use: 0.3-1.2 Hz for lush chorus.
+    interactions:
+      - Faster rates with high depth sound like vibrato.
+    safe_range:
+      - 0.1
+      - 3.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:152
+        confidence: 0.92
+  - id: depth
+    name: Depth
+    section: Modulation
+    role: sweep depth
+    unit: percent
+    does: Sweep amount; 100% moves the delay by 6 ms.
+    musical_use: 30-60% for classic chorus.
+    interactions:
+      - Mix at 100% gives pure vibrato-like pitch modulation.
+    safe_range:
+      - 0.0
+      - 80.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:153
+        confidence: 0.92
+  - id: delay
+    name: Delay
+    section: Delay
+    role: base delay
+    unit: ms
+    does: Base delay time, 5-30 ms.
+    musical_use: 10-15 ms for chorus; longer starts to sound like a doubler.
+    interactions:
+      - Sweep is added on top of this base.
+    safe_range:
+      - 5.0
+      - 30.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:154
+        confidence: 0.92
+  - id: feedback
+    name: Feedback
+    section: Delay
+    role: regeneration
+    unit: percent
+    does: Amount of the delayed signal fed back, 0-90%.
+    musical_use: Keep low (0-20%) for chorus; higher gives resonant, flanger-like colour.
+    interactions:
+      - Higher feedback makes comb filtering more pronounced.
+    safe_range:
+      - 0.0
+      - 50.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:155
+        confidence: 0.92
+  - id: mix
+    name: Mix
+    section: Output
+    role: dry/wet blend
+    unit: percent
+    does: Linear dry/wet blend.
+    musical_use: 40-50% typical.
+    interactions:
+      - 0% bypasses the effect audibly (latency-free).
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:156
+        confidence: 0.92
+  - id: spread
+    name: Spread
+    section: Stereo
+    role: stereo LFO offset
+    unit: percent
+    does: Phase offset of the right channel's LFO (up to a quarter cycle at 100%).
+    musical_use: 100% for wide stereo; 0% for a mono-safe chorus.
+    interactions:
+      - Only matters on stereo material.
+      - 0% makes both channels move together.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/modulation.rs:157
+        confidence: 0.92

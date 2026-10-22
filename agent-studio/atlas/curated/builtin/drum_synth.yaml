@@ -1,0 +1,581 @@
+# Curated knowledge for the built-in plugin `drum_synth` (patch for `atlas merge`).
+# Every value was read from drums.rs in crates/dsp; see README.md.
+default_provenance:
+  source: source
+  confidence: 0.95
+summary: 'Fully synthesised 24-voice drum kit on a General-MIDI-style note map: kick (35, 36), snare (38,
+  40), clap (37, 39), closed hat (42, 44), open hat (46), toms (41/43, 45, 47/48, 50), crash (49, 57)
+  and ride (51, 59). Notes outside the map are ignored; note-off does nothing (hits play out). Output
+  is mono, copied to all channels.'
+signal_flow: 'Each hit is a voice: kick/toms are a sine with pitch-envelope sweep plus a short filtered
+  noise click; snare is a pitched sine body plus high-passed noise; clap is three quick filtered noise
+  bursts plus a tail; hats and cymbals are six inharmonic square oscillators plus noise through high-pass
+  filters. Hit level scales linearly with MIDI velocity. Voices sum x 0.5 -> Level. Closed hat chokes
+  open hat (15 ms). All per-instrument parameters are read when a note is triggered, so changing them
+  affects the next hit, not ringing ones; only Level is live.'
+provenance:
+  summary:
+    source: source
+    ref: crates/dsp/src/plugins/drums.rs:28
+    confidence: 0.95
+  signal_flow:
+    source: source
+    ref: crates/dsp/src/plugins/drums.rs:337
+    confidence: 0.95
+params:
+  - id: level
+    name: Level
+    section: Output
+    role: kit output level
+    unit: dB
+    does: Output level of the whole kit, -48 to +6 dB (default -6); the only parameter applied to already-sounding
+      voices.
+    musical_use: Set for mix headroom.
+    interactions:
+      - All other parameters are latched at note-on and do not change notes already ringing.
+    safe_range:
+      - -24.0
+      - 0.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:15
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:15
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:15
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:15
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:15
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:15
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:15
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:15
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:15
+        confidence: 0.92
+  - id: kick_tune
+    name: Kick Tune
+    section: Kick
+    role: kick pitch
+    unit: semitones
+    does: Transposes the kick's start and end pitch (170 Hz sweeping down to 48 Hz at 0), -12 to +12 semitones.
+    musical_use: Lower for sub-heavy kicks, higher for tight punchy ones.
+    interactions:
+      - Read at note-on.
+    safe_range:
+      - -8.0
+      - 8.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:16
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:16
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:16
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:16
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:16
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:16
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:16
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:16
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:16
+        confidence: 0.92
+  - id: kick_decay
+    name: Kick Decay
+    section: Kick
+    role: kick length
+    unit: ms
+    does: Time for the kick body to fall 60 dB, 50 ms-2 s (log).
+    musical_use: 200-400 ms for tight kicks, 600+ ms for boomy 808-style.
+    interactions:
+      - Also sets the longest tail reported to the host together with Cymbal Decay.
+      - Read at note-on.
+    safe_range:
+      - 100.0
+      - 1200.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:17
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:17
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:17
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:17
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:17
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:17
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:17
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:17
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:17
+        confidence: 0.92
+  - id: snare_tune
+    name: Snare Tune
+    section: Snare
+    role: snare pitch
+    unit: semitones
+    does: Transposes the snare's tonal body (260 Hz sweeping to 185 Hz at 0), -12 to +12 semitones.
+    musical_use: Tune to the song key or to taste.
+    interactions:
+      - Read at note-on.
+    safe_range:
+      - -8.0
+      - 8.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:18
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:18
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:18
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:18
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:18
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:18
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:18
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:18
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:18
+        confidence: 0.92
+  - id: snare_snappy
+    name: Snare Snappy
+    section: Snare
+    role: snare noise amount
+    unit: percent
+    does: 'Level of the noise (snare wire) component relative to the tone: noise amplitude = 0.3 + value/100.'
+    musical_use: 60% default; raise for crisp rimshot-like snares.
+    interactions:
+      - Read at note-on.
+      - At 0% a weak noise part (0.3) remains.
+    safe_range:
+      - 0.0
+      - 100.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:19
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:19
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:19
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:19
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:19
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:19
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:19
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:19
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:19
+        confidence: 0.92
+  - id: snare_decay
+    name: Snare Decay
+    section: Snare
+    role: snare length
+    unit: ms
+    does: Noise decay time (60 dB); the tonal body decays in 60% of this time. Range 50 ms-1 s (log).
+    musical_use: 150-300 ms typical.
+    interactions:
+      - Read at note-on.
+    safe_range:
+      - 80.0
+      - 600.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:20
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:20
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:20
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:20
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:20
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:20
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:20
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:20
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:20
+        confidence: 0.92
+  - id: hat_decay
+    name: Closed Hat Decay
+    section: Hats
+    role: closed hat length
+    unit: ms
+    does: Decay time of the closed hi-hat, 20-500 ms (log).
+    musical_use: 50-100 ms for tight hats.
+    interactions:
+      - Read at note-on.
+      - A closed hat also chokes any ringing open hat within 15 ms.
+    safe_range:
+      - 30.0
+      - 250.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:21
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:21
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:21
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:21
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:21
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:21
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:21
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:21
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:21
+        confidence: 0.92
+  - id: open_hat_decay
+    name: Open Hat Decay
+    section: Hats
+    role: open hat length
+    unit: ms
+    does: Decay time of the open hi-hat, 100 ms-3 s (log).
+    musical_use: 400-800 ms.
+    interactions:
+      - Read at note-on.
+      - Cut short by a closed hat.
+    safe_range:
+      - 200.0
+      - 1500.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:22
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:22
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:22
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:22
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:22
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:22
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:22
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:22
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:22
+        confidence: 0.92
+  - id: tom_tune
+    name: Tom Tune
+    section: Toms
+    role: tom pitch
+    unit: semitones
+    does: Transposes all four toms (base pitches 82, 110, 147 and 196 Hz at 0), -12 to +12 semitones.
+    musical_use: Raise for rack toms, lower for floor toms.
+    interactions:
+      - Read at note-on.
+    safe_range:
+      - -8.0
+      - 8.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:23
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:23
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:23
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:23
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:23
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:23
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:23
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:23
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:23
+        confidence: 0.92
+  - id: tom_decay
+    name: Tom Decay
+    section: Toms
+    role: tom length
+    unit: ms
+    does: Decay time of the toms, 50 ms-2 s (log).
+    musical_use: 300-600 ms.
+    interactions:
+      - Read at note-on.
+    safe_range:
+      - 100.0
+      - 1200.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:24
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:24
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:24
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:24
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:24
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:24
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:24
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:24
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:24
+        confidence: 0.92
+  - id: cymbal_decay
+    name: Cymbal Decay
+    section: Cymbals
+    role: crash/ride length
+    unit: ms
+    does: Decay time of the crash; the ride decays in 60% of it. Range 200 ms-6 s (log).
+    musical_use: 1.5-3 s for crashes.
+    interactions:
+      - Also sets the tail length reported to the host.
+      - Read at note-on.
+    safe_range:
+      - 500.0
+      - 4000.0
+    automatable: true
+    provenance:
+      name:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:25
+        confidence: 0.95
+      section:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:25
+        confidence: 0.95
+      role:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:25
+        confidence: 0.95
+      unit:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:25
+        confidence: 0.97
+      does:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:25
+        confidence: 0.95
+      musical_use:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:25
+        confidence: 0.9
+      interactions:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:25
+        confidence: 0.92
+      safe_range:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:25
+        confidence: 0.9
+      automatable:
+        source: source
+        ref: crates/dsp/src/plugins/drums.rs:25
+        confidence: 0.92
