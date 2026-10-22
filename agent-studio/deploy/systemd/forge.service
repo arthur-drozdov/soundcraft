@@ -1,0 +1,40 @@
+# Install:
+#   sudo useradd --system --create-home --home-dir /var/lib/forge forge
+#   sudo install -d -o forge -g forge /opt/forge /var/lib/forge /etc/forge
+#   sudo -u forge FORGE_ROOT=/opt/forge deploy/scripts/setup-venvs.sh
+#   sudo cp deploy/forge.example.yaml /etc/forge/forge.yaml   # edit listen.host
+#   echo "FORGE_TOKEN=$(python3 -c 'import secrets;print(secrets.token_urlsafe(32))')" | sudo tee /etc/forge/forge.env
+#   sudo chmod 600 /etc/forge/forge.env && sudo chown forge /etc/forge/forge.env
+#   sudo cp deploy/systemd/forge.service /etc/systemd/system/ && sudo systemctl enable --now forge
+[Unit]
+Description=Forge generation service (Agent Studio)
+# Bind address is the Tailscale IP, so wait for the interface.
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=forge
+Group=forge
+EnvironmentFile=/etc/forge/forge.env
+Environment=FORGE_CONFIG=/etc/forge/forge.yaml
+ExecStart=/opt/forge/venvs/gateway/bin/forge serve --config /etc/forge/forge.yaml
+WorkingDirectory=/var/lib/forge
+Restart=on-failure
+RestartSec=5
+# Workers are child processes: stop the whole group, then kill stragglers.
+KillMode=control-group
+TimeoutStopSec=30
+
+# Hardening. The GPU device nodes stay reachable because PrivateDevices is off.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/forge
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

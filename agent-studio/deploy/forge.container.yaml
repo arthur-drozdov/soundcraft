@@ -1,0 +1,75 @@
+# Forge configuration baked into the single `forge` container image
+# (deploy/docker/forge.Dockerfile). Mounted read-only by deploy/compose.yaml.
+#
+# The container listens on 0.0.0.0 because Docker publishes the port only on
+# the address in FORGE_BIND_IP (the Tailscale IP) - see compose.yaml. Do not
+# use this file outside the container.
+
+listen:
+  host: 0.0.0.0
+  port: 7700
+token_env: FORGE_TOKEN
+data_dir: /data
+retention_days: 30
+uploads: {max_bytes: 209715200, max_seconds: 600}
+memory_budget_gb: 96
+
+families:
+  testtone: {enabled: true, lane: cpu}
+  yin: {enabled: true, lane: cpu}
+  analysis: {enabled: true, lane: cpu}
+
+  foundation:
+    enabled: true
+    lane: gpu
+    python: /opt/forge/venvs/foundation/bin/python
+    env: {HF_HOME: /data/hf-cache}
+    options:
+      device: cuda
+      checkpoints:
+        foundation-1: {config: /models/foundation-1/model_config.json, ckpt: /models/foundation-1/model.ckpt}
+        foundation-1.2-samples: {config: /models/foundation-1.2-samples/model_config.json, ckpt: /models/foundation-1.2-samples/model.ckpt}
+        foundation-1.2-keybeds: {config: /models/foundation-1.2-keybeds/model_config.json, ckpt: /models/foundation-1.2-keybeds/model.ckpt}
+
+  sa3:
+    enabled: true
+    lane: gpu
+    python: /opt/forge/venvs/sa3/bin/python
+    env: {HF_HOME: /data/hf-cache}
+    options:
+      device: cuda
+      checkpoints: {sa3-small-music: small-music, sa3-small-sfx: small-sfx, sa3-medium: medium}
+
+  acestep:
+    enabled: true
+    lane: gpu
+    python: /opt/forge/venvs/acestep/bin/python
+    env: {HF_HOME: /data/hf-cache}
+    options:
+      device: cuda
+      checkpoints:
+        ace-step-1.5-base: ACE-Step/acestep-v15-base
+        ace-step-1.5-xl-base: ACE-Step/acestep-v15-xl-base
+      lm: acestep-5Hz-lm-1.7B
+
+  basicpitch:
+    enabled: true
+    lane: cpu
+    python: /opt/forge/venvs/basicpitch/bin/python
+
+  stems:
+    enabled: true
+    lane: cpu
+    options:
+      binary: /opt/forge/bin/stems-split
+      model: /opt/forge/models/stems/htdemucs-42M-v1.0-F32.gguf
+
+  render:
+    enabled: true
+    lane: cpu
+    options:
+      binary: /opt/forge/bin/soundcraft-cli
+
+gary_shim:
+  enabled: false
+  ports: {foundation: 8015, sa3: 8006}

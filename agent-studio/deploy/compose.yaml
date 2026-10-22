@@ -1,0 +1,58 @@
+# Forge on the DGX Spark, single-image topology.
+#
+# The gateway spawns each model family as a SUBPROCESS (DESIGN.md 3.2), so
+# every family must be installed in the same container. The `forge` image
+# therefore holds the gateway plus one venv per family under /opt/forge/venvs
+# (created with --system-site-packages so the NGC image's torch is shared).
+# The per-family Dockerfiles in docker/ are optional building blocks.
+#
+# Setup:
+#   docker login nvcr.io                      # user: $oauthtoken, password: NGC API key
+#   cp forge.env.example forge.env            # see README; or create it as below
+#   printf 'FORGE_TOKEN=%s\nFORGE_BIND_IP=%s\n' "$(python3 -c 'import secrets;print(secrets.token_urlsafe(32))')" "$(tailscale ip -4)" > forge.env
+#   chmod 600 forge.env
+#   docker compose --env-file forge.env up -d --build
+#
+# FORGE_BIND_IP is the Tailscale address: the port is published ONLY there.
+# Inside the container Forge listens on 0.0.0.0 (forge.container.yaml).
+name: forge
+
+services:
+  forge:
+    image: forge:latest
+    build:
+      context: ../..                       # repository root (the render stage compiles soundcraft-cli)
+      dockerfile: agent-studio/deploy/docker/forge.Dockerfile
+      args:
+        BASE_IMAGE: nvcr.io/nvidia/pytorch:25.11-py3
+        WITH_RENDER: "1"                   # 0 = skip the Rust build, mount a binary instead
+        WITH_STEMS: "1"
+    restart: unless-stopped
+    env_file:
+      - forge.env                          # FORGE_TOKEN, FORGE_BIND_IP, optional HF_TOKEN
+    ports:
+      - "${FORGE_BIND_IP:?set FORGE_BIND_IP to the Tailscale IP in forge.env}:7700:7700"
+    volumes:
+      - forge-data:/data                   # data_dir: assets, uploads, SQLite, HF cache
+      - ${FORGE_MODELS_DIR:-./models}:/models:ro   # Foundation checkpoints, stems models
+      # - ./forge.container.yaml:/etc/forge/forge.yaml:ro   # uncomment to edit the config without rebuilding
+    ipc: host                              # PyTorch shared memory
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:7700/v1/health', timeout=4).status == 200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  forge-data:

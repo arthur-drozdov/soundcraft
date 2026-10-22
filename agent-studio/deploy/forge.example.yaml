@@ -1,0 +1,131 @@
+# Forge configuration (bare-metal / systemd install on the DGX Spark).
+# Copy to /etc/forge/forge.yaml (or pass --config / set FORGE_CONFIG).
+# Every key is optional; the values below are the documented defaults unless
+# a comment says otherwise. Paths under /opt/forge are created by
+# deploy/scripts/setup-venvs.sh.
+
+listen:
+  # Bind to the Tailscale / WireGuard address of the Spark (`tailscale ip -4`),
+  # never 0.0.0.0 unless the machine is only reachable from a private network.
+  host: 127.0.0.1
+  port: 7700
+
+# Name of the environment variable that holds the bearer token. Startup fails
+# when it is empty. Generate one with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+token_env: FORGE_TOKEN
+# Tests only. Never enable on a real machine.
+insecure_no_auth: false
+
+# Assets, uploads, scratch space and the SQLite index.
+data_dir: /var/lib/forge
+
+# Unrated, unused assets older than this are purged by `forge purge` and a daily task.
+retention_days: 30
+
+uploads:
+  max_bytes: 209715200   # 200 MB
+  max_seconds: 600
+
+# Sum of loaded models' vram_gb may not exceed this; least-recently-used models
+# are unloaded first. The Spark has 128 GB of unified memory shared with the OS
+# and with SoundCraft's render worker, so the default leaves about 30 GB spare.
+memory_budget_gb: 96
+
+# One entry per family. Unlisted keys fall back to the defaults:
+#   python  - interpreter of the family's environment (default: the gateway's own)
+#   env     - extra environment variables for the worker process
+#   enabled - true for testtone, yin, analysis; false otherwise
+#   lane    - gpu, or cpu for yin, basicpitch, stems, render
+#   options - passed to the worker in the `hello` request
+families:
+  testtone:            # deterministic test generator, no dependencies
+    enabled: true
+    lane: cpu
+
+  yin:                 # monophonic pitch tracker (audiokit.pitch), always available
+    enabled: true
+    lane: cpu
+
+  analysis:            # analyze.audio runs in the gateway process, no worker
+    enabled: true
+    lane: cpu
+
+  foundation:          # Foundation-1 / 1.2 Samples / 1.2 Keybeds (RC Stable Audio Tools)
+    enabled: true
+    lane: gpu
+    python: /opt/forge/venvs/foundation/bin/python
+    env:
+      HF_HOME: /var/lib/forge/hf-cache
+      # Fill in once you have a Hugging Face token that accepted the model terms.
+      # HF_TOKEN: ""
+    options:
+      device: cuda
+      # Directory per model holding the model config JSON next to the checkpoint,
+      # as RC Stable Audio Tools expects. The exact file names come from the
+      # model cards; see deploy/README.md ("Foundation checkpoints").
+      checkpoints:
+        foundation-1:
+          config: /opt/forge/models/foundation-1/model_config.json
+          ckpt: /opt/forge/models/foundation-1/model.ckpt
+        foundation-1.2-samples:
+          config: /opt/forge/models/foundation-1.2-samples/model_config.json
+          ckpt: /opt/forge/models/foundation-1.2-samples/model.ckpt
+        foundation-1.2-keybeds:
+          config: /opt/forge/models/foundation-1.2-keybeds/model_config.json
+          ckpt: /opt/forge/models/foundation-1.2-keybeds/model.ckpt
+
+  sa3:                 # Stable Audio 3
+    enabled: true
+    lane: gpu
+    python: /opt/forge/venvs/sa3/bin/python
+    env:
+      HF_HOME: /var/lib/forge/hf-cache
+    options:
+      device: cuda
+      # Short names accepted by StableAudioModel.from_pretrained, or a local path.
+      checkpoints:
+        sa3-small-music: small-music
+        sa3-small-sfx: small-sfx
+        sa3-medium: medium
+
+  acestep:             # ACE-Step 1.5 (base and XL-base: the only variants with extract/lego/complete)
+    enabled: true
+    lane: gpu
+    python: /opt/forge/venvs/acestep/bin/python
+    env:
+      HF_HOME: /var/lib/forge/hf-cache
+    options:
+      device: cuda
+      checkpoints:
+        ace-step-1.5-base: ACE-Step/acestep-v15-base
+        ace-step-1.5-xl-base: ACE-Step/acestep-v15-xl-base
+      # Language model used for text2music planning.
+      lm: acestep-5Hz-lm-1.7B
+
+  basicpitch:          # Spotify Basic Pitch, CPU
+    enabled: true
+    lane: cpu
+    python: /opt/forge/venvs/basicpitch/bin/python
+    options: {}
+
+  stems:               # stems.cpp command-line tool
+    enabled: true
+    lane: cpu
+    options:
+      binary: /opt/forge/bin/stems-split
+      # GGUF file downloaded by stems.cpp's models.sh. Use a licensed model only
+      # (htdemucs variants are MIT; see deploy/README.md).
+      model: /opt/forge/models/stems/htdemucs-42M-v1.0-F32.gguf
+
+  render:              # headless soundcraft-cli, bounces SoundCraft sessions
+    enabled: true
+    lane: cpu
+    options:
+      binary: /opt/forge/bin/soundcraft-cli
+
+# Optional Gary4juce-compatible local endpoints (SPEC 6.8).
+gary_shim:
+  enabled: false
+  ports:
+    foundation: 8015
+    sa3: 8006

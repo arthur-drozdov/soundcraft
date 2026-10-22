@@ -1,0 +1,7 @@
+# Context is the repository root; keep the (huge) Rust build output and VCS data out of it.
+**/target
+.git
+**/__pycache__
+**/*.pyc
+**/.venv
+**/node_modules
