@@ -160,6 +160,42 @@ Errors: everything `plugin.describe` rejects; a missing or unknown `param` (the 
 {"command": "plugin.param_text", "params": {"track": "Mix", "slot": 0, "param": "mid_freq", "values": [0.0, 0.37, 1.0], "normalized": true}}
 ```
 
+### `audio.analyze`
+
+`{clip}` or `{track, start, end}`, optional `sensitivity`: measures the audio of one clip, or of a track's clips over a range, so an agent can check what it made (level, loudness, tempo, key) without bouncing or leaving the session. A query: it does not change the session, is not journaled and leaves no undo step; nothing is stored.
+
+- `clip` is a clip id (an audio clip on the active playlist). The analysed span is the clip's own range, with the clip's gain, fades, offset and clip effects applied; other clips of the track that overlap it are left out.
+- `track` (id or name) with `start` and `end` (samples, `{"seconds": x}` or a time string; `length` instead of `end` works too) analyses what the track's clips play over that range, again before the mixer (no fader, pan, inserts or sends). The range is cut to the track's material plus one second, so `end` may be far past the last clip. Without `start`/`end` the edit selection is used, if there is one. `clip` and `track` together (or `clip` with `start`/`end`) are refused rather than guessed.
+- `sensitivity` 0..1 (default 0.5; more finds more) is the onset detector's, the same one as Strip Silence / Tab to Transient.
+- At most 10 minutes (and 2^27 samples over all channels) per call; longer is refused. The analysis runs on the calling thread and takes a moment for long spans (seconds for ten minutes), so keep ranges to what matters.
+
+Result:
+
+```json
+{
+  "track": 3, "clip": 12, "start": 0, "end": 144000,
+  "duration_s": 3.0, "sample_rate": 48000, "channels": 1,
+  "peak_dbfs": -6.02, "true_peak_dbfs": -6.02, "rms_dbfs": -9.03, "lufs": -9.7,
+  "onsets_s": [0.1, 0.6, 1.1], "onset_count": 3,
+  "bpm": 120.0, "bpm_confidence": 0.93,
+  "key": "A minor", "key_tonic": 9, "key_mode": "minor", "key_confidence": 0.82,
+  "centroid_hz": 440.0, "clipped_samples": 0, "dc_offset": 0.0
+}
+```
+
+- `clip` is `null` for the range form; `start`/`end` are the samples actually analysed (after the cut above) and `duration_s` their length. `channels` is the track's channel count.
+- Levels are dBFS, floored at -144 (silence): `peak_dbfs` is the sample peak over all channels, `true_peak_dbfs` the 4x-oversampled peak, `rms_dbfs` the RMS of all samples of all channels. `lufs` is integrated loudness (ITU-R BS.1770 with the -70 LUFS and -10 LU gates), from the same meter the bounce reports, -144 when nothing passes the gate (silence, or less than 400 ms of audio).
+- `onsets_s` are onset times in seconds from the start of the analysed span (at most 5000 listed; `onset_count` is the real number).
+- `bpm` (60..200 searched, reported folded by octaves into 80..160, so a 70 BPM ballad reads 140) and `key` (`"C major"`, `"F# minor"`: sharps; `key_tonic` 0 = C .. 11 = B, `key_mode` `"major"`/`"minor"`) are estimates with a 0..1 confidence; both are `null` (confidence 0) when they cannot be estimated: silence, fewer than 3 onsets or under 3 s of audio for the tempo, a flat chroma for the key. Treat a confidence below about 0.3 as "no idea" (noise, a single note, drums for the key). Tempo needs rhythmic material; key needs tonal material, and a bass-only or percussive clip says little.
+- `centroid_hz` is the magnitude-weighted mean frequency (0 for silence), `clipped_samples` the number of samples (all channels) at or beyond +-0.999, and `dc_offset` the mean sample value of the channel with the largest absolute mean.
+
+Errors: no `clip`/`track`; an unknown clip or track; a clip that is MIDI, video, muted or whose audio is not loaded in memory; a track that is not an audio track; an empty range or none given; a span longer than 10 minutes; both `clip` and `track`/`start`/`end`. A range with no material in it is not an error: it reads as silence (-144 dB, `bpm` and `key` null).
+
+```json
+{"command": "audio.analyze", "params": {"clip": 12}}
+{"command": "audio.analyze", "params": {"track": "Loop", "start": 0, "end": {"seconds": 16}}}
+```
+
 ### `session.inspect` / `track.inspect`: plugin format
 
 Every insert in `inserts[]` also carries `format` (`builtin`, `clap`, `vst3` or `au`), and a track with an instrument carries `instrument_format` beside `instrument` (the plugin id), so an agent knows which slots to describe.

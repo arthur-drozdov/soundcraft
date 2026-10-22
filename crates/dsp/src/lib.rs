@@ -13,6 +13,7 @@
 //!
 //! Audio is planar `f32`: `io[channel][frame]`.
 
+pub mod analysis;
 pub mod biquad;
 pub mod meter;
 pub mod offline;
