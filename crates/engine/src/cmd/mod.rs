@@ -23,6 +23,7 @@ mod midi;
 mod mix;
 mod more_util;
 mod options;
+mod plugin_describe;
 mod plugin_state;
 mod query;
 pub(crate) mod sampler;
@@ -132,6 +133,7 @@ pub fn command_specs() -> &'static [CommandSpec] {
         v.extend(vst3::specs());
         v.extend(surround::specs());
         v.extend(plugin_state::specs());
+        v.extend(plugin_describe::specs());
         v.extend(instrument::specs());
         v.extend(sampler::specs());
         v.extend(video::specs());

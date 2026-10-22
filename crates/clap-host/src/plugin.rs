@@ -310,6 +310,13 @@ impl Plugin for ClapPlugin {
         Some(Box::new(ClapEditor { link, info: self.info, ids: self.ids.clone() }))
     }
 
+    fn param_text(&mut self, id: &str, value: f32) -> Option<String> {
+        let i = self.info.params.iter().position(|p| p.id == id)?;
+        // CLAP values are plain values already (the `info` range is the plugin's own).
+        let v = self.info.params.get(i)?.clamp(value);
+        self.inst.value_text(*self.ids.get(i)?, f64::from(v))
+    }
+
     fn state_reader(&mut self) -> Option<Box<dyn soundcraft_dsp::PluginStateReader>> {
         let link = self.inst.state_link()?;
         Some(Box::new(move || link.save_state()))

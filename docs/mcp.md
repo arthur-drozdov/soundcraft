@@ -98,6 +98,8 @@ files it was given rather than guarding against other software on the computer.
 | `parity` | Feature-parity report. |
 | `screenshot`, `ui_inspect`, `ui_set`, `menu_invoke`, `click`, `drag`, `key` | App only (with `--connect`). |
 
+Agent Studio queries such as `plugin.describe` (a plugin's identity, parameters with ranges, units and current value text, state size, editor) and `plugin.param_text` (a plugin's own text for chosen parameter values) have no tools of their own: run them with `execute`, or list them with `list_commands`. They are read-only and leave no undo step. See [control-protocol.md](control-protocol.md#agent-studio-commands).
+
 Resources: `soundcraft://session` (full session JSON), `soundcraft://commands`.
 
 ## Conventions

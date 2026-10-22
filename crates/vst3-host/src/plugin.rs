@@ -33,6 +33,9 @@ pub struct Vst3Plugin {
     /// VST3 id of each `info.params` entry (same order).
     ids: Vec<u32>,
     maps: Vec<Mapping>,
+    /// The plugin's own unit label of each param (same order as `ids`), read on first use by
+    /// [`Plugin::param_text`].
+    units: std::cell::OnceCell<Vec<String>>,
     values: Vec<f32>,
     /// Normalized values waiting for the next block (coalesced per id; bounded).
     pending: Vec<(u32, f64)>,
@@ -106,6 +109,7 @@ impl Vst3Plugin {
             transport: None,
             ids,
             maps,
+            units: std::cell::OnceCell::new(),
             inst,
         };
         let values: Vec<f32> = (0..p.ids.len())
@@ -412,6 +416,22 @@ impl Plugin for Vst3Plugin {
         }))
     }
 
+    fn param_text(&mut self, id: &str, value: f32) -> Option<String> {
+        let i = self.info.params.iter().position(|p| p.id == id)?;
+        let pi = self.info.params.get(i)?;
+        let vid = *self.ids.get(i)?;
+        let n = self.normalized_from_plain(i, pi.clamp(value))?;
+        let text = self.inst.value_text(vid, n)?;
+        if matches!(self.maps.get(i), Some(Mapping::Stepped(_))) {
+            return Some(text);
+        }
+        let units = self.units.get_or_init(|| {
+            let mut by_id: HashMap<u32, String> = self.inst.params().into_iter().map(|p| (p.id, p.units)).collect();
+            self.ids.iter().map(|id| by_id.remove(id).unwrap_or_default()).collect()
+        });
+        Some(with_units(text, units.get(i).map_or("", |u| u.as_str())))
+    }
+
     fn state_reader(&mut self) -> Option<Box<dyn soundcraft_dsp::PluginStateReader>> {
         let (link, ids, unsynced) = (self.inst.state_link(), self.ids.clone(), Arc::clone(&self.unsynced));
         Some(Box::new(move || {
@@ -511,9 +531,13 @@ impl PluginEditor for Vst3Editor {
             return None;
         }
         let text = self.link.value_text(*self.ids.get(i)?, self.normalized(i, value)?)?;
-        // VST3 keeps the units apart from the text (JUCE's label, the SDK's `RangeParameter`),
-        // but some plugins put them in both.
-        let units = self.units.get(i).map_or("", |u| u.trim());
-        if units.is_empty() || text.trim_end().to_lowercase().ends_with(&units.to_lowercase()) { Some(text) } else { Some(format!("{text} {units}")) }
+        Some(with_units(text, self.units.get(i).map_or("", |u| u.as_str())))
     }
+}
+
+/// VST3 keeps the units apart from the text (JUCE's label, the SDK's `RangeParameter`), but some
+/// plugins put them in both.
+fn with_units(text: String, units: &str) -> String {
+    let units = units.trim();
+    if units.is_empty() || text.trim_end().to_lowercase().ends_with(&units.to_lowercase()) { text } else { format!("{text} {units}") }
 }

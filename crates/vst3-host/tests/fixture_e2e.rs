@@ -313,3 +313,28 @@ fn editor_view_is_probed_and_edits_come_back_as_plain_values() {
     let synth = soundcraft_vst3_host::instantiate_plugin(&id_of("Fixture Synth")).unwrap();
     assert!(synth.editor_size().is_err());
 }
+
+/// `Plugin::param_text` (the agent's `plugin.param_text`) asks the controller for any parameter's
+/// text, not only identity-mapped ones, and works on any thread (it reads, never edits).
+#[test]
+fn plugin_param_text_reads_the_controllers_text() {
+    let id = id_of("Fixture Gain");
+    let mut p = soundcraft_vst3_host::instantiate_plugin(&id).unwrap();
+    // Identity-mapped (0..1 plain): the same text the editor handle gives on the main thread.
+    assert_eq!(soundcraft_dsp::Plugin::param_text(&mut p, "13", 0.375).as_deref(), Some("\u{2212}6.0 dB"));
+    // Stepped: the choice label, no units appended.
+    for (v, label) in [(0.0, "A"), (1.0, "B"), (2.0, "C")] {
+        assert_eq!(soundcraft_dsp::Plugin::param_text(&mut p, "3", v).as_deref(), Some(label));
+    }
+    // Out-of-range values clamp; unknown ids and NaN never panic.
+    assert_eq!(soundcraft_dsp::Plugin::param_text(&mut p, "3", 99.0).as_deref(), Some("C"));
+    assert_eq!(soundcraft_dsp::Plugin::param_text(&mut p, "nope", 0.5), None);
+    let _ = soundcraft_dsp::Plugin::param_text(&mut p, "13", f32::NAN);
+    let _ = soundcraft_dsp::Plugin::param_text(&mut p, "12", f32::INFINITY);
+    // Reading text left the plugin's parameters alone.
+    assert_eq!(soundcraft_dsp::Plugin::param(&p, "7"), Some(0.5));
+    for id in ["7", "12", "14"] {
+        let t = soundcraft_dsp::Plugin::param_text(&mut p, id, 1.0);
+        assert!(t.is_some_and(|t| !t.is_empty()), "{id}");
+    }
+}

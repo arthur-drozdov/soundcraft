@@ -253,6 +253,14 @@ pub trait Plugin: Send {
     fn editor(&mut self) -> Option<Box<dyn PluginEditor>> {
         None
     }
+    /// The plugin's own display text for a parameter value (SoundCraft units, as in
+    /// [`PluginInfo::params`]), as its editor would show it (`"2.4 kHz"`). `None` means the plugin
+    /// has none: format it with [`ParamInfo::format`]. Reads only; it never changes the plugin's
+    /// parameters. Main (UI) thread only, never the audio thread (hosted plugins call into their
+    /// controller and allocate).
+    fn param_text(&mut self, _id: &str, _value: f32) -> Option<String> {
+        None
+    }
     /// Reads this instance's state from the UI thread (`None` when it has no state of its own).
     fn state_reader(&mut self) -> Option<Box<dyn PluginStateReader>> {
         None

@@ -105,3 +105,61 @@ A center `move` can include `before` (panel ID or null to append) for tab order.
 The equivalent `{"action": ...}` form accepts a serialized shared docking action;
 this is also the form emitted by the renderer. Protected-canvas and app-specific panel
 rules apply equally to both forms.
+
+## Agent Studio commands
+
+Commands added for agent-driven sessions (see `docs/agent-studio/SPEC.md` §5.3). Run them through `engine.execute` (or the MCP `execute` tool) like any command.
+
+### `plugin.describe`
+
+`{track, slot: 0..9 | "a".."j" | "instrument"}` or `{track, instrument: true}`: everything an agent needs to know about one plugin before touching it. A query: it does not change the session, is not journaled and leaves no undo step. `track` is an id or a name (required, no selection fallback); `slot` is the insert slot (a number or its letter), `"instrument"` or `instrument: true` the track's instrument.
+
+Result:
+
+```json
+{
+  "track": 3, "slot": 1, "instrument": false, "available": true,
+  "plugin": {"id": "eq_7band", "format": "builtin", "name": "EQ 7-Band", "short_name": "EQ7",
+             "vendor": "SoundCraft", "version": "0.10.0", "category": "Eq", "is_instrument": false},
+  "bypass": false, "preset": "<factory default>",
+  "params": [{"id": "mid_freq", "name": "MF Freq", "min": 100.0, "max": 8000.0, "default": 1000.0,
+              "unit": "Hz", "taper": "Log", "choices": [], "value": 2400.0, "text": "2.40 kHz",
+              "text_source": "soundcraft"}],
+  "state_bytes": 0, "stored_state_bytes": 0, "state_refused": false, "editor": false, "instance": false
+}
+```
+
+- `slot` is the insert index (`null` for the instrument, where `instrument` is `true`).
+- `plugin.format` is `builtin`, `clap`, `vst3` or `au`, from the id prefix. `vendor` and `version` come from the host's plugin scan for hosted plugins (`null` when the scan has none) and are `"SoundCraft"` and the application version for built-ins. `category` is the `engine.plugins` category name.
+- `params` lists every parameter the plugin exposes, in the plugin's order, with its range in SoundCraft units (`min`..`max`), `default`, `unit` (`None`, `Db`, `Hz`, `Ms`, `Percent`, `Ratio`, `Semitones`, `Cents`, `Seconds`, `Toggle`, `Choice`), `taper` (`Linear` or `Log`) and, for `Choice` parameters, the `choices` labels (the value is the index). `value` is the session's value (clamped into range), else the value the plugin itself holds (a hosted plugin's restored state), else the default. `text` is that value as the plugin shows it; `text_source` says whether it is the plugin's own (`"plugin"`) or SoundCraft's generic format (`"soundcraft"`, for built-ins and for hosted plugins without value-to-text).
+- `state_bytes` is the size of the state a save would store: for a hosted plugin, what a temporary instance reports after the stored state is loaded; `stored_state_bytes` is the state currently held by the session (it is only refreshed from the live plugin when the application saves, so it can be stale or 0). Built-ins keep no state beyond their parameters (0). `state_refused` is true when the plugin rejected the stored state.
+- `editor` is whether the plugin has its own native window (`true`/`false`; `null` when it could not be checked). Built-ins use SoundCraft's generic parameter editor and report `false`.
+- `instance` is true when a temporary instance was created for this call. Only hosted plugins get one: it is private to the call, never the instance running on the audio thread, and it is dropped before the command returns. Creating it can take a moment for large plugins; it runs on the control (main) thread, as the plugin formats expect.
+- A slot whose plugin is not installed on this machine is still described: `available: false`, `params: []`, `editor: null`, the id and format from the session.
+
+Errors: no `track`/`slot`; a slot out of range, a bad letter, or both `slot` and `instrument: true`; an empty insert slot; `instrument` on a track without an instrument; an unknown track.
+
+```json
+{"command": "plugin.describe", "params": {"track": "Lead", "slot": "a"}}
+{"command": "plugin.describe", "params": {"track": "Keys", "instrument": true}}
+```
+
+### `plugin.param_text`
+
+`{track, slot | instrument: true, param, values: [number], normalized?: bool}`: the plugin's own display text for chosen values of one parameter, without changing the session (calibration: what does 0.37 of this knob mean?). A query, like `plugin.describe`. `slot`, `instrument` and `track` are as above; `param` is a parameter id from `plugin.describe`.
+
+- `values` holds 1 to 64 finite numbers, in the parameter's units (`min`..`max`). With `normalized: true` they are control travel `0..1` (honouring the parameter's taper), which is what a calibration sweep wants: `[0, 0.1, … 1]`.
+- Each value is clamped into the parameter's range first (choices and toggles round to a whole index); `clamped` says it was changed and `used` is the value that was formatted.
+- The text is the plugin's own value-to-text where the plugin has one (VST3 `getParamStringByValue`, CLAP `value_to_text`; Audio Units use SoundCraft's format), else SoundCraft's format for the unit (`"2.40 kHz"`, `"-6.0 dB"`). `source` says which (`"plugin"`/`"soundcraft"`). Hosted plugins are asked through a private temporary instance with the session's stored state loaded, which is dropped before the command returns.
+
+Result: `{track, slot, param, name, unit, normalized, texts: ["100.0 Hz", "2.40 kHz"], results: [{value, used, clamped, text, source}]}`; `texts` is `results[].text`.
+
+Errors: everything `plugin.describe` rejects; a missing or unknown `param` (the message lists valid ids, up to 24); `values` not an array, empty, longer than 64, or holding anything but finite numbers; a plugin that is not installed.
+
+```json
+{"command": "plugin.param_text", "params": {"track": "Mix", "slot": 0, "param": "mid_freq", "values": [0.0, 0.37, 1.0], "normalized": true}}
+```
+
+### `session.inspect` / `track.inspect`: plugin format
+
+Every insert in `inserts[]` also carries `format` (`builtin`, `clap`, `vst3` or `au`), and a track with an instrument carries `instrument_format` beside `instrument` (the plugin id), so an agent knows which slots to describe.

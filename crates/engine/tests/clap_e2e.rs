@@ -127,3 +127,59 @@ fn clap_state_is_captured_stored_and_restored_before_the_first_block() {
     let half = gain_of(e.session());
     assert!((half - reference / 3.0).abs() < 1e-5, "{half} vs {}", reference / 3.0);
 }
+
+/// `plugin.describe` / `plugin.param_text` on a hosted plugin: identity from the scan, the
+/// plugin's own text where it has one, its restored state, and a private temporary instance.
+#[test]
+fn describe_and_param_text_read_a_hosted_plugin() {
+    install_fixture();
+    let gain = "clap:org.soundcraft.test.gain";
+    let mut e = Engine::default();
+    e.execute("track.new", &json!({})).unwrap();
+    let t = e.session().tracks[0].id.0;
+    e.execute("mix.insert", &json!({"track": t, "plugin": gain})).unwrap();
+    // A state the session's parameters do not hold: gain 1.5 (two little-endian f64s: gain, mode).
+    let mut p = soundcraft_mix::create_instance(gain, None, 48_000.0, 512, 2).unwrap().plugin;
+    p.set_param("7", 1.5);
+    let mut io = vec![vec![0.0f32; 64]; 2];
+    p.process(&mut io, 64);
+    let blob = p.state_reader().unwrap().save_state().unwrap();
+    drop(p);
+    e.execute("mix.insert_state", &json!({"track": t, "slot": 0, "state": soundcraft_model::b64::encode(&blob)})).unwrap();
+    e.session_mut().track_mut(soundcraft_model::TrackId(t)).unwrap().mixer.inserts[0].as_mut().unwrap().params.clear();
+    let (undo, dirty) = (e.can_undo(), e.is_dirty());
+
+    let r = e.execute("plugin.describe", &json!({"track": t, "slot": "a"})).unwrap();
+    assert_eq!(r["plugin"]["id"], gain);
+    assert_eq!(r["plugin"]["format"], "clap");
+    assert_eq!(r["plugin"]["name"], "Fixture Gain");
+    assert_eq!(r["plugin"]["vendor"], "SoundCraft tests");
+    assert_eq!(r["plugin"]["version"], "1.0.0");
+    assert_eq!(r["instance"], true);
+    assert_eq!(r["editor"], true, "the fixture has clap.gui");
+    assert_eq!(r["state_bytes"], blob.len());
+    assert_eq!(r["stored_state_bytes"], blob.len());
+    assert_eq!(r["state_refused"], false);
+    let params = r["params"].as_array().unwrap();
+    let gain_p = params.iter().find(|p| p["id"] == "7").unwrap();
+    assert_eq!(gain_p["value"], 1.5, "the value the restored plugin holds, not the default");
+    assert_eq!(gain_p["default"], 1.0);
+    assert_eq!(gain_p["text_source"], "soundcraft", "the fixture has no text for its gain");
+    let mode = params.iter().find(|p| p["id"] == "3").unwrap();
+    assert_eq!(mode["text"], "A");
+    assert_eq!(mode["text_source"], "plugin");
+
+    let r = e.execute("plugin.param_text", &json!({"track": t, "slot": 0, "param": "3", "values": [0, 1, 2, 9]})).unwrap();
+    assert_eq!(r["texts"], json!(["A", "B", "C", "C"]), "the plugin's own labels; out-of-range values clamp");
+    assert_eq!(r["results"][1]["source"], "plugin");
+    assert_eq!(r["results"][3]["clamped"], true);
+    let r = e.execute("plugin.param_text", &json!({"track": t, "slot": 0, "param": "7", "values": [0.5, 3.0]})).unwrap();
+    assert_eq!(r["results"][0]["source"], "soundcraft");
+    assert_eq!(r["results"][1]["used"], 2.0);
+
+    // The queries touched neither the document nor its history.
+    assert_eq!((e.can_undo(), e.is_dirty()), (undo, dirty));
+    let ins = e.session().tracks[0].mixer.inserts[0].as_ref().unwrap();
+    assert!(ins.params.is_empty(), "no parameter was written back");
+    assert_eq!(ins.state_bytes().as_deref(), Some(&blob[..]));
+}

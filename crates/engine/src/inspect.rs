@@ -32,6 +32,19 @@ fn clip_json(e: &Engine, c: &Clip) -> Value {
     v
 }
 
+/// The plugin format an id belongs to, from its prefix: `builtin`, `clap`, `vst3` or `au`.
+pub fn plugin_format(id: &str) -> &'static str {
+    if id.starts_with(soundcraft_clap_host::ID_PREFIX) {
+        "clap"
+    } else if id.starts_with(soundcraft_vst3_host::ID_PREFIX) {
+        "vst3"
+    } else if id.starts_with(soundcraft_au_host::ID_PREFIX) {
+        "au"
+    } else {
+        "builtin"
+    }
+}
+
 fn track_json(e: &Engine, t: &Track, full: bool) -> Value {
     let inserts: Vec<Value> = t
         .mixer
@@ -39,7 +52,7 @@ fn track_json(e: &Engine, t: &Track, full: bool) -> Value {
         .iter()
         .enumerate()
         .filter_map(|(i, x)| {
-            x.as_ref().map(|x| json!({"slot": i, "plugin": x.plugin, "bypass": x.bypass, "params": if full { json!(x.params) } else { Value::Null }}))
+            x.as_ref().map(|x| json!({"slot": i, "plugin": x.plugin, "format": plugin_format(&x.plugin), "bypass": x.bypass, "params": if full { json!(x.params) } else { Value::Null }}))
         })
         .collect();
     let sends: Vec<Value> = t
@@ -63,6 +76,7 @@ fn track_json(e: &Engine, t: &Track, full: bool) -> Value {
     });
     if let Some(i) = &t.instrument {
         v["instrument"] = json!(i.plugin);
+        v["instrument_format"] = json!(plugin_format(&i.plugin));
     }
     if !t.comments.is_empty() {
         v["comments"] = json!(t.comments);
