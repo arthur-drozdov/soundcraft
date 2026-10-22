@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "soundcraft": {
+      "type": "stdio",
+      "command": "soundcraft-cli",
+      "args": ["mcp", "--connect", "{{SOUNDCRAFT_PORT}}"]
+    },
+    "forge": {
+      "type": "stdio",
+      "command": "forge-mcp",
+      "args": [],
+      "env": {
+        "FORGE_URL": "{{FORGE_URL}}",
+        "FORGE_TOKEN": "${FORGE_TOKEN}",
+        "AGENT_STUDIO_PROJECT": "{{PROJECT}}"
+      }
+    },
+    "atlas": {
+      "type": "stdio",
+      "command": "atlas-mcp",
+      "args": [],
+      "env": {
+        "ATLAS_PROFILES": "{{ATLAS_PROFILES}}"
+      }
+    }
+  }
+}
