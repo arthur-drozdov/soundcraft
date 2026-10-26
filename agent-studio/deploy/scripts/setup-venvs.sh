@@ -112,7 +112,9 @@ do_foundation() {
 uv_sync() { # name url ref extra-args-string
   make_venv "$1"
   fetch_src "$1-upstream" "$2" "$3"
-  "$VENVS/$1/bin/python" -m pip install --quiet uv
+  # --ignore-installed: the NGC base ships uv in system site-packages, so a
+  # plain install into a --system-site-packages venv is a silent no-op.
+  "$VENVS/$1/bin/python" -m pip install --quiet --ignore-installed uv
   local skip=""
   if [ "$SYSTEM_SITE" = "1" ]; then
     skip="--no-install-package torch --no-install-package torchaudio --no-install-package torchvision --no-install-package triton"
