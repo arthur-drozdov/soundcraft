@@ -42,7 +42,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends git cmake libsn
 COPY agent-studio /opt/agent-studio
 COPY --from=render /out/ /opt/forge/bin/
 RUN if [ "$WITH_STEMS" = "1" ]; then STEMS=stems; else STEMS=; fi \
-    && /opt/agent-studio/deploy/scripts/setup-venvs.sh gateway foundation sa3 acestep basicpitch $STEMS \
+    && /opt/agent-studio/deploy/scripts/setup-venvs.sh gateway sa3 acestep basicpitch $STEMS \
     && rm -rf /opt/forge/src/*/.git /root/.cache
 
 COPY agent-studio/deploy/forge.container.yaml /etc/forge/forge.yaml
