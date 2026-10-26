@@ -36,7 +36,7 @@ ARG WITH_STEMS=1
 ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 FORGE_ROOT=/opt/forge SYSTEM_SITE=1 \
     PATH=/opt/forge/venvs/gateway/bin:$PATH
 
-RUN apt-get update && apt-get install -y --no-install-recommends git cmake libsndfile1 ffmpeg libasound2 \
+RUN apt-get update && apt-get install -y --no-install-recommends git cmake libsndfile1 ffmpeg libasound2t64 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY agent-studio /opt/agent-studio
