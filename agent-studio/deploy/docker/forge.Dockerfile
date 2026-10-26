@@ -18,7 +18,7 @@
 ARG BASE_IMAGE=nvcr.io/nvidia/pytorch:25.11-py3
 ARG WITH_RENDER=1
 
-FROM rust:1.90-bookworm AS render-1
+FROM rust:1.99-bookworm AS render-1
 RUN apt-get update && apt-get install -y --no-install-recommends pkg-config libasound2-dev libssl-dev cmake \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
