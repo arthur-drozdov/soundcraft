@@ -94,7 +94,13 @@ fetch_src() { # name url ref
 }
 
 install_agent_studio() { # venv-name extras
-  "$VENVS/$1/bin/python" -m pip install --quiet "${AGENT_STUDIO_DIR}${2:-}"
+  # uv-synced venvs have no pip; prefer the venv's uv when it has one.
+  if [ -x "$VENVS/$1/bin/uv" ]; then
+    "$VENVS/$1/bin/uv" pip install --python "$VENVS/$1/bin/python" "${AGENT_STUDIO_DIR}${2:-}"
+  else
+    "$VENVS/$1/bin/python" -m ensurepip --upgrade >/dev/null 2>&1 || true
+    "$VENVS/$1/bin/python" -m pip install --quiet "${AGENT_STUDIO_DIR}${2:-}"
+  fi
 }
 
 do_gateway() {
