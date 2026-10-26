@@ -58,6 +58,10 @@ for name in ("torch", "torchaudio", "torchvision", "triton", "numpy"):
         pass
 PY
   export PIP_CONSTRAINT="$CONSTRAINTS"
+  # setuptools >= 81 no longer ships pkg_resources; packages that still
+  # import it in setup.py (e.g. some pandas sdists) fail to build. Force
+  # binary wheels for those so pip never runs their setup.py.
+  export PIP_ONLY_BINARY="${PIP_ONLY_BINARY:-pandas}"
 fi
 
 make_venv() { # name
