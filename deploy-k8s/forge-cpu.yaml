@@ -1,0 +1,158 @@
+# Forge gateway — CPU-stage deployment on the k0s-ts Spark cluster.
+# Stage 1 of docs/agent-studio/SPEC.md §6: gateway + CPU families
+# (testtone, yin, analysis). GPU families (sa3, acestep, foundation,
+# stems) come later via the NGC-based forge.Dockerfile image.
+#
+# No custom image yet: git-clone init container + python:3.12-slim,
+# pip-installing agent-studio from the fork at startup.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: forge
+  labels:
+    app.kubernetes.io/part-of: agent-studio
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: forge-config
+  namespace: forge
+data:
+  forge.yaml: |
+    listen:
+      host: 0.0.0.0
+      port: 7700
+    token_env: FORGE_TOKEN
+    insecure_no_auth: false
+    data_dir: /var/lib/forge
+    retention_days: 30
+    uploads:
+      max_bytes: 209712000
+      max_seconds: 600
+    memory_budget_gb: 96
+    families:
+      testtone:
+        enabled: true
+      yin:
+        enabled: true
+      analysis:
+        enabled: true
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: forge-data
+  namespace: forge
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forge-gateway
+  namespace: forge
+  labels:
+    app: forge-gateway
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: forge-gateway
+  template:
+    metadata:
+      labels:
+        app: forge-gateway
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        sonnia.ai/dgx-spark: "true"
+      initContainers:
+        - name: clone
+          image: alpine/git:latest
+          command:
+            - git
+            - clone
+            - --depth
+            - "1"
+            - -b
+            - main
+            - https://github.com/arthur-drozdov/soundcraft
+            - /work/soundcraft
+          volumeMounts:
+            - name: work
+              mountPath: /work
+          resources:
+            # Guaranteed QoS required by the cluster's require-guaranteed-qos policy.
+            requests: { cpu: 250m, memory: 512Mi }
+            limits: { cpu: 250m, memory: 512Mi }
+      containers:
+        - name: forge
+          image: python:3.12-slim
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              pip install --no-cache-dir '/work/soundcraft/agent-studio[forge]'
+              exec python -m forge serve
+          env:
+            - name: FORGE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: forge-token
+                  key: FORGE_TOKEN
+            - name: FORGE_CONFIG
+              value: /etc/forge/forge.yaml
+          ports:
+            - name: http
+              containerPort: 7700
+          readinessProbe:
+            httpGet: { path: /v1/health, port: http }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 60
+          startupProbe:
+            httpGet: { path: /v1/health, port: http }
+            periodSeconds: 10
+            failureThreshold: 120   # up to 20 min for pip install + worker spawn
+          volumeMounts:
+            - name: work
+              mountPath: /work
+            - name: data
+              mountPath: /var/lib/forge
+            - name: config
+              mountPath: /etc/forge
+              readOnly: true
+          resources:
+            # Guaranteed QoS required by the cluster's require-guaranteed-qos policy.
+            requests: { cpu: "2", memory: 8Gi }
+            limits: { cpu: "2", memory: 8Gi }
+      volumes:
+        - name: work
+          emptyDir: {}
+        - name: data
+          persistentVolumeClaim:
+            claimName: forge-data
+        - name: config
+          configMap:
+            name: forge-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: forge
+  namespace: forge
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  selector:
+    app: forge-gateway
+  ports:
+    - name: http
+      port: 7700
+      targetPort: http

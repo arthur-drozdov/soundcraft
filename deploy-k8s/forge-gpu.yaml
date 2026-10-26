@@ -1,0 +1,129 @@
+# Stage 2: Forge on the DGX Spark with GPU model families.
+# Image built by kaniko (forge-build-pod.yaml) → ghcr.io/arthur-drozdov/forge.
+# Replaces the CPU-stage pod: same deployment/service names, so the existing
+# Tailscale LoadBalancer (forge-forge.tail3eb9a6.ts.net:7700) carries over.
+#
+# GPU: requests all 4 time-sliced nvidia.com/gpu shares of one Spark (only
+# 1 is used by sonnia-memory per node at time of writing; if that grows,
+# drop to 3). memory_budget_gb 96 per DESIGN §3.1.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: forge-config
+  namespace: forge
+data:
+  forge.yaml: |
+    listen:
+      host: 0.0.0.0
+      port: 7700
+    token_env: FORGE_TOKEN
+    insecure_no_auth: false
+    data_dir: /data
+    retention_days: 30
+    uploads:
+      max_bytes: 209712000
+      max_seconds: 600
+    memory_budget_gb: 96
+    families:
+      testtone:
+        enabled: true
+      yin:
+        enabled: true
+      analysis:
+        enabled: true
+      basicpitch:
+        enabled: true
+      acestep:
+        enabled: true
+      sa3:
+        enabled: true
+      stems:
+        enabled: true
+      render:
+        enabled: true
+        options:
+          binary: /opt/forge/bin/soundcraft-cli
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: forge-models
+  namespace: forge
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 200Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forge-gateway
+  namespace: forge
+  labels:
+    app: forge-gateway
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: forge-gateway
+  template:
+    metadata:
+      labels:
+        app: forge-gateway
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        sonnia.ai/dgx-spark: "true"
+      containers:
+        - name: forge
+          image: ghcr.io/arthur-drozdov/forge:cpu-gpu-v1
+          env:
+            - name: FORGE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: forge-token
+                  key: FORGE_TOKEN
+            - name: FORGE_CONFIG
+              value: /etc/forge/forge.yaml
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: forge-hf
+                  key: HF_TOKEN
+            - name: HF_HOME
+              value: /data/hf-cache
+          ports:
+            - name: http
+              containerPort: 7700
+          startupProbe:
+            exec:
+              command: ["/bin/sh", "-c", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:7700/v1/health', timeout=5).status==200 else 1)\""]
+            periodSeconds: 15
+            failureThreshold: 80   # up to 20 min for family worker spawn
+          readinessProbe:
+            exec:
+              command: ["/bin/sh", "-c", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:7700/v1/health', timeout=5).status==200 else 1)\""]
+            periodSeconds: 15
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: models
+              mountPath: /models
+              readOnly: true
+          resources:
+            # Guaranteed QoS required by the cluster's require-guaranteed-qos policy.
+            requests: { cpu: "8", memory: 48Gi, nvidia.com/gpu: "4" }
+            limits: { cpu: "8", memory: 48Gi, nvidia.com/gpu: "4" }
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: forge-data
+        - name: models
+          persistentVolumeClaim:
+            claimName: forge-models
+      imagePullSecrets:
+        - name: ghcr-pull

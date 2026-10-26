@@ -1,0 +1,69 @@
+# kaniko build for the full Forge image (gateway + GPU family venvs + render + stems).
+# Pod runs in the forge-build namespace on spark-15d6 (keeps spark-4a06 free for
+# the gateway). Pushes ghcr.io/arthur-drozdov/forge:<tag>; base image pulled from
+# nvcr.io using the NGC key — both credentials in secret kaniko-docker-cfg.
+#
+# Start with: kubectl apply -f forge-build-pod.yaml   (after secrets exist)
+# Watch:      kubectl -n forge-build logs -f kaniko-forge
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kaniko-cache
+  namespace: forge-build
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kaniko-forge
+  namespace: forge-build
+  labels:
+    app: kaniko-forge
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  nodeSelector:
+    kubernetes.io/hostname: spark-15d6
+  containers:
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:latest
+      args:
+        - --context=git://github.com/arthur-drozdov/soundcraft.git
+        - --dockerfile=agent-studio/deploy/docker/forge.Dockerfile
+        - --destination=ghcr.io/arthur-drozdov/forge:cpu-gpu-v1
+        - --build-arg=BASE_IMAGE=nvcr.io/nvidia/pytorch:25.11-py3
+        - --build-arg=WITH_RENDER=1
+        - --build-arg=WITH_STEMS=1
+        - --cache=true
+        - --cache-dir=/cache
+        - --cache-repo=ghcr.io/arthur-drozdov/forge/cache
+        - --snapshot-mode=redo
+        - --compression=zstd
+        - --verbosity=info
+      env:
+        - name: DOCKER_CONFIG
+          value: /kaniko/.docker
+      volumeMounts:
+        - name: docker-cfg
+          mountPath: /kaniko/.docker
+          readOnly: true
+        - name: cache
+          mountPath: /cache
+      resources:
+        # Guaranteed QoS required by the cluster's require-guaranteed-qos policy.
+        # 6Gi/4cpu: sized to what spark-15d6 has unreserved (openclaw's
+        # 108 Gi memory-reservation head holds the rest).
+        requests: { cpu: "4", memory: 6Gi }
+        limits: { cpu: "4", memory: 6Gi }
+  volumes:
+    - name: docker-cfg
+      secret:
+        secretName: kaniko-docker-cfg
+    - name: cache
+      persistentVolumeClaim:
+        claimName: kaniko-cache
