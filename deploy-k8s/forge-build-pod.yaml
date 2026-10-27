@@ -46,6 +46,10 @@ spec:
         - --cache-dir=/cache
         - --cache-repo=ghcr.io/arthur-drozdov/forge/cache
         - --snapshot-mode=redo
+        # The NGC base is ~20GB and a per-CMD redo snapshot of the venv stage
+        # OOM-killed the 6Gi container; one whole-rootfs snapshot at the end
+        # fits in the memory limit.
+        - --single-snapshot
         - --compression=zstd
         - --verbosity=info
       env:
@@ -59,10 +63,11 @@ spec:
           mountPath: /cache
       resources:
         # Guaranteed QoS required by the cluster's require-guaranteed-qos policy.
-        # 2cpu/6Gi: openclaw/hx workloads hold nearly all of 4a06's cores; the
-        # watcher recreates the pod if admission is denied outright.
-        requests: { cpu: "2", memory: 6Gi }
-        limits: { cpu: "2", memory: 6Gi }
+        # 2cpu/12Gi: openclaw/hx workloads hold nearly all of 4a06's cores
+        # (memory is plentiful); 12Gi because the redo-snapshot of the venv
+        # stage OOM-killed the container at 6Gi.
+        requests: { cpu: "2", memory: 12Gi }
+        limits: { cpu: "2", memory: 12Gi }
   volumes:
     - name: docker-cfg
       secret:
