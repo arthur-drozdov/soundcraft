@@ -1,0 +1,4 @@
+# actionlint otherwise treats custom ARC scale-set labels as unknown.
+self-hosted-runner:
+  labels:
+    - spark-soundcraft
