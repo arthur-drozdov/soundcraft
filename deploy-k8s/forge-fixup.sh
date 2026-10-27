@@ -24,7 +24,18 @@ if [ -x "$SA3/bin/python" ]; then
   "$SA3/bin/python" -c "import forge.workers.sa3" 2>/dev/null || log "WARNING: sa3 worker still not importable"
 fi
 
-# 2. Gateway writes its SQLite jobdb/asset index into the PVC; files created
+# 2. acestep venv imports acestep.handler, which needs torchaudio + a
+#    torchvision matching torch. The NGC base has neither torchaudio nor a
+#    matching torchvision once pypi torch 2.14 lands in the venv; install the
+#    consistent pypi trio (proven on this GB10 by the sa3 venv).
+ACE=/opt/forge/venvs/acestep
+if [ -x "$ACE/bin/python" ] && ! "$ACE/bin/python" -c "import acestep.handler" >/dev/null 2>&1; then
+  log "aligning acestep torch/torchaudio/torchvision trio"
+  /usr/local/bin/uv pip install --python "$ACE/bin/python" --upgrade torch torchaudio torchvision >/dev/null 2>&1 \
+    || log "acestep trio install FAILED"
+fi
+
+# 3. Gateway writes its SQLite jobdb/asset index into the PVC; files created
 #    by an earlier root run are unreadable to the service user.
 if [ -d /data ]; then
   chown -R 999:999 /data 2>/dev/null || true
