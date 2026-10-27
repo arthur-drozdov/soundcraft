@@ -8,7 +8,9 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, NotRequired, TypedDict
+from typing import Any, TypedDict
+
+from typing_extensions import NotRequired
 
 PROTOCOL_VERSION = 1
 MAX_LINE_BYTES = 8 * 1024 * 1024
