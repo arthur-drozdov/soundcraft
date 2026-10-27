@@ -408,6 +408,44 @@ async def test_models_load_unload_and_health(tmp_path: Path) -> None:
         await svc.stop()
 
 
+class _FakeNvidiaSmi:
+    """Stands in for `nvidia-smi --query-gpu=name,memory.used,memory.total` output."""
+
+    def __init__(self, out: bytes, returncode: int = 0) -> None:
+        self._out, self.returncode = out, returncode
+
+    async def communicate(self) -> tuple[bytes, bytes]:
+        return self._out, b""
+
+
+async def _health_gpu(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, out: bytes, returncode: int = 0, present: bool = True) -> dict[str, Any]:
+    from forge import service as service_mod
+
+    monkeypatch.setattr(service_mod.shutil, "which", lambda exe: "/usr/bin/nvidia-smi" if present else None)
+
+    async def fake_exec(*args: Any, **kw: Any) -> _FakeNvidiaSmi:
+        return _FakeNvidiaSmi(out, returncode)
+
+    monkeypatch.setattr(service_mod.asyncio, "create_subprocess_exec", fake_exec)
+    return (await make_service(make_config(tmp_path)).health())["gpu"]
+
+
+async def test_health_gpu_without_memory_reported(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """DGX Spark's GB10 (and other drivers) answer [N/A] for memory: the GPU is still there."""
+    assert await _health_gpu(monkeypatch, tmp_path, b"NVIDIA GB10, [N/A], [N/A]\n") == {"available": True, "name": "NVIDIA GB10"}
+
+
+async def test_health_gpu_with_memory_reported(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    info = await _health_gpu(monkeypatch, tmp_path, b"NVIDIA GeForce RTX 4090, 2048, 24576\n")
+    assert info == {"available": True, "name": "NVIDIA GeForce RTX 4090", "memory_used_gb": 2.0, "memory_total_gb": 24.0}
+
+
+@pytest.mark.parametrize("out,returncode", [(b"", 0), (b"NVIDIA GB10, 1, 2\n", 1)])
+async def test_health_gpu_absent(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, out: bytes, returncode: int) -> None:
+    assert await _health_gpu(monkeypatch, tmp_path, out, returncode) == {"available": False}
+    assert await _health_gpu(monkeypatch, tmp_path, b"NVIDIA GB10, 1, 2\n", present=False) == {"available": False}
+
+
 async def test_restart_marks_unfinished_jobs_failed(tmp_path: Path) -> None:
     cfg = make_config(tmp_path)
     db = JobDB(cfg.data_dir)

@@ -86,6 +86,14 @@ class _Lane:
     task: asyncio.Task[None] | None = None
 
 
+def _mem_gib(mib: str) -> float | None:
+    """MiB reported by nvidia-smi as GiB, or None when the driver withholds it (`[N/A]`)."""
+    try:
+        return round(float(mib) / 1024, 2)
+    except ValueError:
+        return None
+
+
 class ForgeService:
     """Owns the asset store, the worker manager, the job database and the two lane queues."""
 
@@ -518,11 +526,16 @@ class ForgeService:
                     stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
                 )
                 out, _ = await asyncio.wait_for(proc.communicate(), 3.0)
-                name, used, total = [p.strip() for p in out.decode().splitlines()[0].split(",")]
-                info = {
-                    "available": True, "name": name,
-                    "memory_used_gb": round(float(used) / 1024, 2), "memory_total_gb": round(float(total) / 1024, 2),
-                }
+                if proc.returncode == 0:
+                    fields = [p.strip() for p in out.decode().splitlines()[0].split(",")]
+                    if fields[0]:
+                        # A GPU that reports itself answers [N/A] for memory (DGX Spark's GB10
+                        # does), so only the name decides availability.
+                        info = {"available": True, "name": fields[0]}
+                        for key, value in zip(("memory_used_gb", "memory_total_gb"), fields[1:3]):
+                            gib = _mem_gib(value)
+                            if gib is not None:
+                                info[key] = gib
             except (OSError, ValueError, IndexError, asyncio.TimeoutError):
                 info = {"available": False}
         self._gpu_cache = (now, info)
