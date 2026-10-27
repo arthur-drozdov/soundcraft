@@ -142,7 +142,15 @@ uv_sync() { # name url ref extra-args-string
   # and the model packages import it at module load.
   if ! "$VENVS/$1/bin/python" -c "import torch, torchaudio" >/dev/null 2>&1; then
     log "$1 venv lacks a complete torch/torchaudio set; installing pypi trio"
-    "$VENVS/$1/bin/uv" pip install --python "$VENVS/$1/bin/python" --upgrade torch torchaudio torchvision
+    # `uv sync` recreates the venv, wiping the venv-local uv installed above.
+    uvbin="$VENVS/$1/bin/uv"; [ -x "$uvbin" ] || uvbin="$(command -v uv || true)"
+    if [ -z "$uvbin" ]; then
+      log "no uv available for $1; bootstrapping pip"
+      "$VENVS/$1/bin/python" -m ensurepip --upgrade >/dev/null 2>&1 || true
+      "$VENVS/$1/bin/python" -m pip install --quiet torch torchaudio torchvision
+    else
+      "$uvbin" pip install --python "$VENVS/$1/bin/python" --upgrade torch torchaudio torchvision
+    fi
   fi
   install_agent_studio "$1"
 }
