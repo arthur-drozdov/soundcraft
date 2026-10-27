@@ -5,10 +5,10 @@ jobs:
   probe:
     runs-on: spark-soundcraft
     steps:
-      - name: docker daemon?
+      - name: can we run dockerd?
         run: |
-          echo "DOCKER_HOST=${DOCKER_HOST:-unset}"
-          docker info 2>&1 | head -12 || true
-          ls -la /run/user/$(id -u)/ 2>&1 | head -8 || true
-          ls -la /run/docker.sock /run/containerd/containerd.sock 2>&1 || true
-          sg docker -c "docker ps" 2>&1 | head -3 || true
+          command -v dockerd && echo "dockerd present" || echo "no dockerd"
+          command -v iptables || echo "no iptables"
+          grep -E "CapEff" /proc/self/status
+          (dockerd --version || true)
+          sudo -n true 2>/dev/null && echo "sudo ok" || echo "no sudo"
