@@ -1,0 +1,14 @@
+{
+  "mcp": {
+    "servers": {
+      "soundcraft": {
+        "type": "local",
+        "command": [
+          "/Users/adrozdov/repos/soundcraft/target/release/soundcraft-cli",
+          "mcp",
+          "--demo"
+        ]
+      }
+    }
+  }
+}

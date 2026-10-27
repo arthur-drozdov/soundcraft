@@ -138,9 +138,11 @@ uv_sync() { # name url ref extra-args-string
   (cd "$SRC/$1-upstream" && UV_PROJECT_ENVIRONMENT="$VENVS/$1" "$VENVS/$1/bin/uv" sync --inexact $skip $4)
   # If uv resolved a managed interpreter (a project pinning a different Python
   # than the NGC base), the venv no longer sees the base's torch — install one.
-  if ! "$VENVS/$1/bin/python" -c "import torch" >/dev/null 2>&1; then
-    log "$1 venv has no torch (uv-managed interpreter); installing pypi torch"
-    "$VENVS/$1/bin/uv" pip install --python "$VENVS/$1/bin/python" torch torchaudio
+  # torchaudio is checked too: the NGC base ships torch but NOT torchaudio,
+  # and the model packages import it at module load.
+  if ! "$VENVS/$1/bin/python" -c "import torch, torchaudio" >/dev/null 2>&1; then
+    log "$1 venv lacks a complete torch/torchaudio set; installing pypi trio"
+    "$VENVS/$1/bin/uv" pip install --python "$VENVS/$1/bin/python" --upgrade torch torchaudio torchvision
   fi
   install_agent_studio "$1"
 }
