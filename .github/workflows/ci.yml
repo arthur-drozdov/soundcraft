@@ -1,7 +1,6 @@
 name: CI
 
-# Quality gates for every push to main and every pull request (`cargo xtask ci`), through the
-# suite's shared gate workflow in craft-common-actions.
+# Quality gates for every push to main and every pull request (`cargo xtask ci`).
 on:
   push:
     branches: [main]
@@ -18,10 +17,12 @@ concurrency:
 
 jobs:
   gate:
-    # Tracks @main so suite-wide CI fixes reach every app without a PR in each repository.
-    uses: storytold/craft-common-actions/.github/workflows/gate.yml@main
+    uses: ./.github/workflows/ci-gate.yml
     with:
+      command: cargo xtask ci
+      # Keep the Linux gate leg on Spark; no platform matrix changes.
+      os: '["spark-soundcraft"]'
       packages: >-
-        pkg-config libxkbcommon-dev libwayland-dev libx11-dev libxcb1-dev libxcursor-dev
+        build-essential pkg-config libxkbcommon-dev libwayland-dev libx11-dev libxcb1-dev libxcursor-dev
         libxrandr-dev libxi-dev libfontconfig1-dev libfreetype-dev mesa-vulkan-drivers
         libgl1-mesa-dev libasound2-dev

@@ -19,5 +19,172 @@ concurrency:
 
 jobs:
   lint:
-    # Intentionally tracked at @main (not SHA-pinned) so org-wide CI improvements, security fixes, and build optimizations propagate without PR churn across all craftapp repos.
-    uses: storytold/craft-common-actions/.github/workflows/packaging-lint.yml@main
+    # Local ARM64 implementation of the checks exposed by
+    # storytold/craft-common-actions/.github/workflows/packaging-lint.yml
+    # at 86bc2ce420c548d7b171874b67814217532a1648. It uses public tool
+    # interfaces and the same validation contract; no upstream action source
+    # is vendored. Keep the check name stable for branch protection.
+    name: lint / lint
+    runs-on: spark-soundcraft
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install packaging tools and ARM64 actionlint
+        shell: bash
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+          ACTIONLINT_ARCHIVE_SHA256: 325e971b6ba9bfa504672e29be93c24981eeb1c07576d730e9f7c8805afff0c6
+        run: |
+          set -euo pipefail
+          if [[ "${RUNNER_ARCH}" != "ARM64" || "$(uname -m)" != "aarch64" ]]; then
+            echo "Expected the spark-soundcraft ARM64 runner; got ${RUNNER_ARCH}/$(uname -m)" >&2
+            exit 1
+          fi
+
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            appstream ca-certificates curl desktop-file-utils libgcc-s1 \
+            libgssapi-krb5-2 libicu74 libssl3t64 libstdc++6 libunwind8 \
+            libxml2-utils python3-yaml shellcheck zlib1g
+
+          archive="${RUNNER_TEMP}/actionlint.tar.gz"
+          curl --proto '=https' --proto-redir '=https' -fsSL \
+            -o "${archive}" \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_arm64.tar.gz"
+          echo "${ACTIONLINT_ARCHIVE_SHA256}  ${archive}" | sha256sum --check --status
+          mkdir -p "${RUNNER_TEMP}/actionlint-bin"
+          tar -xz -C "${RUNNER_TEMP}/actionlint-bin" -f "${archive}" actionlint
+          "${RUNNER_TEMP}/actionlint-bin/actionlint" -version
+
+      - name: Install pinned ARM64 PowerShell
+        shell: bash
+        env:
+          POWERSHELL_VERSION: 7.6.9
+          POWERSHELL_ARCHIVE_SHA256: 02eb9991af447c7e7fe881acde195961afd397c40b8eb1c2b3856b84ec2d85f2
+        run: |
+          set -euo pipefail
+          archive="${RUNNER_TEMP}/powershell-linux-arm64.tar.gz"
+          install_dir="${RUNNER_TEMP}/powershell-${POWERSHELL_VERSION}"
+          curl --proto '=https' --proto-redir '=https' -fsSL \
+            -o "${archive}" \
+            "https://github.com/PowerShell/PowerShell/releases/download/v${POWERSHELL_VERSION}/powershell-${POWERSHELL_VERSION}-linux-arm64.tar.gz"
+          echo "${POWERSHELL_ARCHIVE_SHA256}  ${archive}" | sha256sum --check --status
+          mkdir -p "${install_dir}"
+          tar -xzf "${archive}" -C "${install_dir}"
+          chmod +x "${install_dir}/pwsh"
+          echo "${install_dir}" >> "${GITHUB_PATH}"
+          "${install_dir}/pwsh" -NoLogo -NoProfile -NonInteractive -Command - <<'POWERSHELL'
+          $ErrorActionPreference = "Stop"
+          $PSVersionTable.PSVersion.ToString()
+          POWERSHELL
+
+      - name: actionlint
+        shell: bash
+        run: |
+          "${RUNNER_TEMP}/actionlint-bin/actionlint" -color
+
+      - name: shellcheck
+        shell: bash
+        run: |
+          sh_files=()
+          while IFS= read -r path; do sh_files+=("$path"); done < <(find packaging -type f -name '*.sh' 2>/dev/null || true)
+          if [[ -f packaging/linux/AppRun ]]; then sh_files+=(packaging/linux/AppRun); fi
+          if ((${#sh_files[@]})); then shellcheck "${sh_files[@]}"; fi
+
+      - name: AppImage AppRun desktop integration
+        shell: bash
+        run: |
+          if [[ -f packaging/linux/apprun-test.sh ]]; then
+            bash packaging/linux/apprun-test.sh
+          fi
+
+      - name: Linux tarball installer test
+        shell: bash
+        run: |
+          if [[ -f packaging/linux/test_install.py ]]; then
+            python3 packaging/linux/test_install.py
+          fi
+
+      - name: FreeBSD package layout (dry run)
+        shell: bash
+        run: |
+          if [[ -f packaging/freebsd/package.sh ]] && grep -q -- '--dry-run' packaging/freebsd/package.sh; then
+            bash packaging/freebsd/package.sh --dry-run
+          fi
+
+      - name: PowerShell
+        shell: bash
+        run: |
+          pwsh -NoLogo -NoProfile -NonInteractive -Command - <<'POWERSHELL'
+          $ErrorActionPreference = "Stop"
+          foreach ($file in Get-ChildItem packaging/windows/*.ps1) {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$null, [ref]$errors) | Out-Null
+            if ($errors) {
+              $errors | ForEach-Object { Write-Output "::error file=$($file.Name)::$_" }
+              exit 1
+            }
+            Write-Output "ok $($file.Name)"
+          }
+          if (Test-Path ./packaging/windows/check-icons.ps1) {
+            & ./packaging/windows/check-icons.ps1
+          }
+          POWERSHELL
+
+      - name: XML, desktop entry, AppStream, Flatpak manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t wxs < <(compgen -G 'packaging/windows/*.wxs' || true)
+          mapfile -t wxl < <(compgen -G 'packaging/windows/*.wxl' || true)
+          mapfile -t plist < <(compgen -G 'packaging/macos/*.plist*' || true)
+          mapfile -t xml < <(compgen -G 'packaging/linux/*.xml*' || true)
+          if ((${#wxs[@]} + ${#wxl[@]} + ${#plist[@]} + ${#xml[@]})); then
+            xmllint --noout "${wxs[@]}" "${wxl[@]}" "${plist[@]}" "${xml[@]}"
+          fi
+
+          for file in "${wxs[@]}"; do
+            if grep -oE '<Icon Id="[^"]*"' "$file" | grep -vE '\.(ico|exe)"$'; then
+              echo "::error file=${file}::Icon Id must end in .ico or .exe"
+              exit 1
+            fi
+            duplicates=$(grep -oiE '(UpgradeCode|Guid)="[0-9A-F-]{36}"' "$file" | cut -d'"' -f2 | sort -f | uniq -di)
+            if [[ -n "$duplicates" ]]; then
+              echo "::error file=${file}::duplicate GUID: ${duplicates}"
+              exit 1
+            fi
+          done
+
+          while IFS= read -r desktop; do desktop-file-validate "$desktop"; done \
+            < <(compgen -G 'packaging/linux/*.desktop' || true)
+
+          while IFS= read -r metainfo; do
+            base=$(basename "$metainfo" .in)
+            sed -e 's/@VERSION@/0.0.0/' -e 's/@DATE@/2026-01-01/' "$metainfo" >"${RUNNER_TEMP}/${base}"
+            appstreamcli validate --no-net --explain "${RUNNER_TEMP}/${base}"
+          done < <(compgen -G 'packaging/linux/*.metainfo.xml.in' || true)
+
+          python3 - <<'PYEOF'
+          import glob
+          import yaml
+
+          source_files = [p for p in glob.glob("packaging/linux/flatpak/*.yml") if not p.endswith(".bundle.yml")]
+          bundle_files = glob.glob("packaging/linux/flatpak/*.bundle.yml")
+          if source_files and bundle_files:
+              with open(source_files[0], encoding="utf-8") as stream:
+                  source = yaml.safe_load(stream)
+              with open(bundle_files[0], encoding="utf-8") as stream:
+                  bundle = yaml.safe_load(stream)
+              for key in ("runtime", "runtime-version", "sdk", "finish-args"):
+                  if key in source and key in bundle:
+                      assert source[key] == bundle[key], f"Flatpak manifests disagree on {key}: {source[key]} vs {bundle[key]}"
+              print("Flatpak manifests ok")
+          PYEOF
+
+      - name: Embedded icons existence check
+        shell: bash
+        run: |
+          if [[ -f packaging/check-icons.sh ]]; then
+            bash packaging/check-icons.sh
+          fi
