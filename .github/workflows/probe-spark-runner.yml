@@ -5,10 +5,10 @@ jobs:
   probe:
     runs-on: spark-soundcraft
     steps:
-      - name: can we run dockerd?
+      - name: rootless dockerd attempt
         run: |
-          command -v dockerd && echo "dockerd present" || echo "no dockerd"
-          command -v iptables || echo "no iptables"
-          grep -E "CapEff" /proc/self/status
-          (dockerd --version || true)
-          sudo -n true 2>/dev/null && echo "sudo ok" || echo "no sudo"
+          command -v docker-rootless.sh rootlesskit newuidmap || true
+          unshare --user --map-root-user echo "userns ok" 2>&1 | head -2
+          export XDG_RUNTIME_DIR=/tmp/xdg; mkdir -p $XDG_RUNTIME_DIR; chmod 700 $XDG_RUNTIME_DIR
+          (dockerd --rootless --iptables=false --bridge=none --storage-driver=vfs > /tmp/dockerd.log 2>&1 &) ; sleep 6
+          DOCKER_HOST=unix://$XDG_RUNTIME_DIR/docker.sock docker run --rm --net=none hello-world 2>&1 | tail -4 || tail -12 /tmp/dockerd.log
