@@ -3,9 +3,12 @@
 # Replaces the CPU-stage pod: same deployment/service names, so the existing
 # Tailscale LoadBalancer (forge-forge.tail3eb9a6.ts.net:7700) carries over.
 #
-# GPU: requests all 4 time-sliced nvidia.com/gpu shares of one Spark (only
-# 1 is used by sonnia-memory per node at time of writing; if that grows,
-# drop to 3). memory_budget_gb 96 per DESIGN §3.1.
+# GPU: requests the time-sliced nvidia.com/gpu shares left free on spark-4a06
+# (2 of 4 at time of writing: sonnia-memory holds the other two; spark-15d6
+# is cordoned behind a qwen.sonnia.ai/dedicated taint). CPU is capped at 4
+# because 4a06 already carries ~16 cores of other requests. If more shares
+# free up, raise both again — workers only ever use one GPU at a time anyway,
+# the request is about admission, not parallelism.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -116,8 +119,11 @@ spec:
               readOnly: true
           resources:
             # Guaranteed QoS required by the cluster's require-guaranteed-qos policy.
-            requests: { cpu: "8", memory: 48Gi, nvidia.com/gpu: "4" }
-            limits: { cpu: "8", memory: 48Gi, nvidia.com/gpu: "4" }
+            # Sized to spark-4a06's free slice: 2 of 4 time-sliced GPUs (2 are
+            # held by sonnia-memory), 4 cpu (node runs ~16 cores already),
+            # 48Gi (only ~26% of the node's 128GB unified memory reserved).
+            requests: { cpu: "4", memory: 48Gi, nvidia.com/gpu: "2" }
+            limits: { cpu: "4", memory: 48Gi, nvidia.com/gpu: "2" }
       volumes:
         - name: data
           persistentVolumeClaim:
