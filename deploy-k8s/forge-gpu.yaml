@@ -78,11 +78,23 @@ spec:
         app: forge-gateway
     spec:
       automountServiceAccountToken: false
+      # GPU device injection on this cluster goes through the nvidia runtime
+      # (same as every other GPU workload); without this the container gets
+      # NVIDIA_* env vars but no /dev/nvidia* nodes.
+      runtimeClassName: nvidia
       nodeSelector:
         sonnia.ai/dgx-spark: "true"
       containers:
         - name: forge
           image: ghcr.io/arthur-drozdov/forge:cpu-gpu-v2
+          # The image's USER is forge(999), but setup-venvs.sh ran as root and
+          # uv installed the sa3 venv's managed CPython under /root/.local/share
+          # (mode 700) — unreadable to 999. Run as root until the Dockerfile
+          # sets UV_PYTHON_INSTALL_DIR=/opt/forge/uv-python and the image is
+          # rebuilt.
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
           env:
             - name: FORGE_TOKEN
               valueFrom:

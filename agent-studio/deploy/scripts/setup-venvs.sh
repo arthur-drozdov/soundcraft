@@ -118,6 +118,11 @@ do_foundation() {
 uv_sync() { # name url ref extra-args-string
   make_venv "$1"
   fetch_src "$1-upstream" "$2" "$3"
+  # uv-managed interpreters must live somewhere the runtime user can read:
+  # the default lands in /root/.local/share/uv (mode 700) when the image is
+  # built as root, and the gateway runs as an unprivileged user.
+  export UV_PYTHON_INSTALL_DIR="${UV_PYTHON_INSTALL_DIR:-$FORGE_ROOT/uv-python}"
+  mkdir -p "$UV_PYTHON_INSTALL_DIR"
   # --ignore-installed: the NGC base ships uv in system site-packages, so a
   # plain install into a --system-site-packages venv is a silent no-op.
   "$VENVS/$1/bin/python" -m pip install --quiet --ignore-installed uv
