@@ -5,15 +5,10 @@ jobs:
   probe:
     runs-on: spark-soundcraft
     steps:
-      - name: what am I
+      - name: docker daemon?
         run: |
-          echo "runner=$RUNNER_NAME"; uname -a && nproc && free -g | head -2
-          echo "--- docker:"; docker version 2>&1 | head -6 || echo "no docker"
-          echo "--- docker sock:"; ls -la /var/run/docker.sock 2>&1 || true
-          echo "--- containerd/nerdctl/buildah/kaniko:"
-          for t in nerdctl ctr buildah kaniko ko img bundle; do command -v $t || echo "missing: $t"; done
-          echo "--- privileged-ish hints:"; id; cat /proc/1/cgroup | head -3
-          echo "--- /var/run:"; ls /var/run | head -20
-          echo "--- net:"; curl -s -m 8 -o /dev/null -w "ghcr:%{http_code}\n" https://ghcr.io/v2/ || true
-          echo "--- cache disk:"; df -h . /tmp | tail -3
-          echo "--- tools:"; for t in git cargo uv pip3 python3 cmake; do command -v $t || echo "missing: $t"; done
+          echo "DOCKER_HOST=${DOCKER_HOST:-unset}"
+          docker info 2>&1 | head -12 || true
+          ls -la /run/user/$(id -u)/ 2>&1 | head -8 || true
+          ls -la /run/docker.sock /run/containerd/containerd.sock 2>&1 || true
+          sg docker -c "docker ps" 2>&1 | head -3 || true
