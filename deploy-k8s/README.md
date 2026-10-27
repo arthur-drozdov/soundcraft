@@ -4,7 +4,13 @@ One-command restore of the whole serving stack:
 
 ```sh
 kubectl apply -f deploy-k8s/forge-gpu.yaml        # config, PVCs, deployment, LB service
+python3 deploy-k8s/verify-forge.py http://100.100.7.29:7700 "$FORGE_TOKEN" /tmp/forge-verify
 ```
+
+`verify-forge.py` is the post-rollout gate (stdlib only): health and the GPU
+report, the 10-model roster, then real work on the box — an ACE-Step XL loop on
+the GPU lane, a stems.cpp split of it and an SA3 SFX — checking each returned WAV
+decodes, is the expected length and is not silent. Non-zero exit on any failure.
 
 Image builds run in CI: the `forge-image` workflow (`.github/workflows/forge-image.yml`)
 builds `agent-studio/deploy/docker/forge.Dockerfile` with buildx on a GitHub-hosted
@@ -26,6 +32,7 @@ the commit that retags.
 | file | purpose |
 |---|---|
 | `forge-gpu.yaml` | serving stack: ConfigMap `forge-config`, PVCs `forge-data`/`forge-models`, Deployment `forge-gateway`, Tailscale LoadBalancer `forge` (port 7700) |
+| `verify-forge.py` | post-rollout end-to-end gate: health, model roster, GPU loop + stem split + SFX, WAV sanity |
 | `forge-build-pod.yaml` | retired kaniko build pod (superseded by the `forge-image` GitHub Actions workflow) |
 | `forge-cpu.yaml` | historical CPU-only stage (superseded; kept for reference) |
 | `forge-fixup.sh` | historical startup hotpatch (pre-v3 images only; the fixes are now in the image) |
