@@ -3,12 +3,11 @@
 # Replaces the CPU-stage pod: same deployment/service names, so the existing
 # Tailscale LoadBalancer (forge-forge.tail3eb9a6.ts.net:7700) carries over.
 #
-# GPU: requests the time-sliced nvidia.com/gpu shares left free on spark-4a06
-# (2 of 4 at time of writing: sonnia-memory holds the other two; spark-15d6
-# is cordoned behind a qwen.sonnia.ai/dedicated taint). CPU is capped at 4
-# because 4a06 already carries ~16 cores of other requests. If more shares
-# free up, raise both again — workers only ever use one GPU at a time anyway,
-# the request is about admission, not parallelism.
+# GPU: requests 1 time-sliced nvidia.com/gpu share (the device plugin on this
+# cluster caps shared pods at 1 per pod) on spark-4a06; spark-15d6 is cordoned
+# behind a qwen.sonnia.ai/dedicated taint. CPU is capped at 4 because 4a06
+# already carries ~16 cores of other requests. Workers only ever use one GPU
+# at a time, so this costs no functionality — it just serializes jobs.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -119,11 +118,11 @@ spec:
               readOnly: true
           resources:
             # Guaranteed QoS required by the cluster's require-guaranteed-qos policy.
-            # Sized to spark-4a06's free slice: 2 of 4 time-sliced GPUs (2 are
-            # held by sonnia-memory), 4 cpu (node runs ~16 cores already),
-            # 48Gi (only ~26% of the node's 128GB unified memory reserved).
-            requests: { cpu: "4", memory: 48Gi, nvidia.com/gpu: "2" }
-            limits: { cpu: "4", memory: 48Gi, nvidia.com/gpu: "2" }
+            # The GPU device plugin caps shared pods at 1 nvidia.com/gpu each;
+            # Forge runs one model on the GPU at a time anyway. 4 cpu / 48Gi
+            # sized to spark-4a06's free capacity (2/4 slices, ~4 free cores).
+            requests: { cpu: "4", memory: 48Gi, nvidia.com/gpu: "1" }
+            limits: { cpu: "4", memory: 48Gi, nvidia.com/gpu: "1" }
       volumes:
         - name: data
           persistentVolumeClaim:
