@@ -1,21 +1,24 @@
 # kaniko build for the full Forge image (gateway + GPU family venvs + render + stems).
-# Pod runs in the forge-build namespace on spark-15d6 (keeps spark-4a06 free for
-# the gateway). Pushes ghcr.io/arthur-drozdov/forge:<tag>; base image pulled from
-# nvcr.io using the NGC key — both credentials in secret kaniko-docker-cfg.
+# Pod runs in the forge-build namespace on spark-4a06 (spark-15d6 is cordoned
+# behind a qwen.sonnia.ai/dedicated taint since 2026-10-27). Pushes
+# ghcr.io/arthur-drozdov/forge:<tag>; base image pulled from nvcr.io using the
+# NGC key — both credentials in secret kaniko-docker-cfg.
+# Layer cache lives in the ghcr cache repo (warm) so the local PVC is optional
+# speed; cpu is kept low because openclaw/hx workloads saturate the node.
 #
 # Start with: kubectl apply -f forge-build-pod.yaml   (after secrets exist)
 # Watch:      kubectl -n forge-build logs -f kaniko-forge
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: kaniko-cache
+  name: kaniko-cache-2
   namespace: forge-build
 spec:
   accessModes: ["ReadWriteOnce"]
   storageClassName: local-path
   resources:
     requests:
-      storage: 50Gi
+      storage: 40Gi
 ---
 apiVersion: v1
 kind: Pod
@@ -28,14 +31,14 @@ spec:
   restartPolicy: Never
   automountServiceAccountToken: false
   nodeSelector:
-    kubernetes.io/hostname: spark-15d6
+    kubernetes.io/hostname: spark-4a06
   containers:
     - name: kaniko
       image: gcr.io/kaniko-project/executor:latest
       args:
         - --context=git://github.com/arthur-drozdov/soundcraft.git
         - --dockerfile=agent-studio/deploy/docker/forge.Dockerfile
-        - --destination=ghcr.io/arthur-drozdov/forge:cpu-gpu-v1
+        - --destination=ghcr.io/arthur-drozdov/forge:cpu-gpu-v2
         - --build-arg=BASE_IMAGE=nvcr.io/nvidia/pytorch:25.11-py3
         - --build-arg=WITH_RENDER=1
         - --build-arg=WITH_STEMS=1
@@ -56,14 +59,14 @@ spec:
           mountPath: /cache
       resources:
         # Guaranteed QoS required by the cluster's require-guaranteed-qos policy.
-        # 6Gi/4cpu: sized to what spark-15d6 has unreserved (openclaw's
-        # 108 Gi memory-reservation head holds the rest).
-        requests: { cpu: "4", memory: 6Gi }
-        limits: { cpu: "4", memory: 6Gi }
+        # 2cpu/6Gi: openclaw/hx workloads hold nearly all of 4a06's cores; the
+        # watcher recreates the pod if admission is denied outright.
+        requests: { cpu: "2", memory: 6Gi }
+        limits: { cpu: "2", memory: 6Gi }
   volumes:
     - name: docker-cfg
       secret:
         secretName: kaniko-docker-cfg
     - name: cache
       persistentVolumeClaim:
-        claimName: kaniko-cache
+        claimName: kaniko-cache-2

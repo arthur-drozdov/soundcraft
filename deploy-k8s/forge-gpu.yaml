@@ -82,7 +82,7 @@ spec:
         sonnia.ai/dgx-spark: "true"
       containers:
         - name: forge
-          image: ghcr.io/arthur-drozdov/forge:cpu-gpu-v1
+          image: ghcr.io/arthur-drozdov/forge:cpu-gpu-v2
           env:
             - name: FORGE_TOKEN
               valueFrom:
