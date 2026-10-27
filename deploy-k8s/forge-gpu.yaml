@@ -95,6 +95,9 @@ spec:
           securityContext:
             runAsUser: 0
             runAsGroup: 0
+          # Wraps the image's ENTRYPOINT to apply the not-yet-rebuilt image
+          # fixes (sa3 venv torch, protocol.py 3.10 import) at container start.
+          command: ["/opt/fixup/fixup.sh", "/opt/forge/venvs/gateway/bin/forge", "serve"]
           env:
             - name: FORGE_TOKEN
               valueFrom:
@@ -123,6 +126,10 @@ spec:
               command: ["/bin/sh", "-c", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:7700/v1/health', timeout=5).status==200 else 1)\""]
             periodSeconds: 15
           volumeMounts:
+            - name: fixup
+              mountPath: /opt/fixup/fixup.sh
+              subPath: fixup.sh
+              readOnly: true
             - name: data
               mountPath: /data
             - name: models
@@ -136,6 +143,10 @@ spec:
             requests: { cpu: "4", memory: 48Gi, nvidia.com/gpu: "1" }
             limits: { cpu: "4", memory: 48Gi, nvidia.com/gpu: "1" }
       volumes:
+        - name: fixup
+          configMap:
+            name: forge-fixup
+            defaultMode: 0755
         - name: data
           persistentVolumeClaim:
             claimName: forge-data
