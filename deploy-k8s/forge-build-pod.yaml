@@ -38,7 +38,7 @@ spec:
       args:
         - --context=git://github.com/arthur-drozdov/soundcraft.git
         - --dockerfile=agent-studio/deploy/docker/forge.Dockerfile
-        - --destination=ghcr.io/arthur-drozdov/forge:cpu-gpu-v2
+        - --destination=ghcr.io/arthur-drozdov/forge:cpu-gpu-v3
         - --build-arg=BASE_IMAGE=nvcr.io/nvidia/pytorch:25.11-py3
         - --build-arg=WITH_RENDER=1
         - --build-arg=WITH_STEMS=1

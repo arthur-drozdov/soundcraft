@@ -1,5 +1,5 @@
 #!/bin/bash
-# Bakes the runtime fixes that aren't yet in the forge:cpu-gpu-v2 image into
+# Bakes the runtime fixes that aren't yet in the forge:cpu-gpu-v3 image into
 # the container's writable layer at startup (before the gateway serves).
 # The next image build carries all of these (setup-venvs.sh + protocol.py are
 # fixed on main), at which point this script becomes a no-op.
