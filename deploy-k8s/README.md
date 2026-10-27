@@ -8,7 +8,7 @@ kubectl apply -f deploy-k8s/forge-gpu.yaml        # config, PVCs, deployment, LB
 
 Image builds run in CI: the `forge-image` workflow (`.github/workflows/forge-image.yml`)
 builds `agent-studio/deploy/docker/forge.Dockerfile` with buildx on a GitHub-hosted
-arm64 runner and pushes `ghcr.io/arthur-drozdov/forge:<tag>` (workflow_dispatch takes a
+arm64 runner and pushes `ghcr.io/arthur-drozdov/forge-ci:<tag>` (workflow_dispatch takes a
 `tag` input; pushes touching `agent-studio/**` rebuild the default `cpu-gpu-v3` tag).
 The old in-cluster kaniko pod (`forge-build-pod.yaml`) is retired — the self-hosted
 spark runners carry no container daemon (no privileged DinD), so building on the cluster
