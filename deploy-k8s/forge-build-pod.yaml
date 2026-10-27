@@ -63,11 +63,11 @@ spec:
           mountPath: /cache
       resources:
         # Guaranteed QoS required by the cluster's require-guaranteed-qos policy.
-        # 2cpu/12Gi: openclaw/hx workloads hold nearly all of 4a06's cores
-        # (memory is plentiful); 12Gi because the redo-snapshot of the venv
-        # stage OOM-killed the container at 6Gi.
-        requests: { cpu: "2", memory: 12Gi }
-        limits: { cpu: "2", memory: 12Gi }
+        # 2cpu/28Gi: openclaw/hx workloads hold nearly all of 4a06's cores
+        # (memory is plentiful); the v3 image (uv-python + family venvs +
+        # torch + stems.cpp) OOM-killed the full-filesystem snapshot at 12Gi.
+        requests: { cpu: "2", memory: 28Gi }
+        limits: { cpu: "2", memory: 28Gi }
   volumes:
     - name: docker-cfg
       secret:

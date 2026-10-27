@@ -6,15 +6,21 @@ One-command restore of the whole serving stack:
 kubectl apply -f deploy-k8s/forge-gpu.yaml        # config, PVCs, deployment, LB service
 ```
 
-The image builds are done by the kaniko pod in `forge-build-pod.yaml`
-(`kubectl apply -n forge-build -f` it, watch `kaniko-forge`); retag by editing
-`--destination` and the deployment's `image:` together.
+Image builds run in CI: the `forge-image` workflow (`.github/workflows/forge-image.yml`)
+builds `agent-studio/deploy/docker/forge.Dockerfile` with buildx on a GitHub-hosted
+arm64 runner and pushes `ghcr.io/arthur-drozdov/forge:<tag>` (workflow_dispatch takes a
+`tag` input; pushes touching `agent-studio/**` rebuild the default `cpu-gpu-v3` tag).
+The old in-cluster kaniko pod (`forge-build-pod.yaml`) is retired — the self-hosted
+spark runners carry no container daemon (no privileged DinD), so building on the cluster
+is not available; hosted arm runners build this image for free. After a build lands,
+`kubectl apply -f forge-gpu.yaml` restores serving; retag by editing `--destination`
+in CI usage and the deployment's `image:` together.
 
 ## Files
 | file | purpose |
 |---|---|
 | `forge-gpu.yaml` | serving stack: ConfigMap `forge-config`, PVCs `forge-data`/`forge-models`, Deployment `forge-gateway`, Tailscale LoadBalancer `forge` (port 7700) |
-| `forge-build-pod.yaml` | kaniko build of `agent-studio/deploy/docker/forge.Dockerfile` → `ghcr.io/arthur-drozdov/forge:cpu-gpu-vN` |
+| `forge-build-pod.yaml` | retired kaniko build pod (superseded by the `forge-image` GitHub Actions workflow) |
 | `forge-cpu.yaml` | historical CPU-only stage (superseded; kept for reference) |
 | `forge-fixup.sh` | historical startup hotpatch (pre-v3 images only; the fixes are now in the image) |
 
