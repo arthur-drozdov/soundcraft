@@ -7,9 +7,13 @@ jobs:
     steps:
       - name: what am I
         run: |
-          echo "runner=$RUNNER_NAME"
-          uname -a && nproc && free -g | head -2
+          echo "runner=$RUNNER_NAME"; uname -a && nproc && free -g | head -2
           echo "--- docker:"; docker version 2>&1 | head -6 || echo "no docker"
-          echo "--- podman:"; podman version 2>&1 | head -4 || echo "no podman"
-          echo "--- gpu:"; nvidia-smi 2>&1 | head -5 || echo "no nvidia-smi"
+          echo "--- docker sock:"; ls -la /var/run/docker.sock 2>&1 || true
+          echo "--- containerd/nerdctl/buildah/kaniko:"
+          for t in nerdctl ctr buildah kaniko ko img bundle; do command -v $t || echo "missing: $t"; done
+          echo "--- privileged-ish hints:"; id; cat /proc/1/cgroup | head -3
+          echo "--- /var/run:"; ls /var/run | head -20
+          echo "--- net:"; curl -s -m 8 -o /dev/null -w "ghcr:%{http_code}\n" https://ghcr.io/v2/ || true
+          echo "--- cache disk:"; df -h . /tmp | tail -3
           echo "--- tools:"; for t in git cargo uv pip3 python3 cmake; do command -v $t || echo "missing: $t"; done
