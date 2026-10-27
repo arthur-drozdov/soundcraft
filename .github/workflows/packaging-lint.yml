@@ -44,7 +44,9 @@ jobs:
 
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            appstream curl desktop-file-utils libxml2-utils python3-yaml shellcheck
+            appstream ca-certificates curl desktop-file-utils libgcc-s1 \
+            libgssapi-krb5-2 libicu74 libssl3t64 libstdc++6 libunwind8 \
+            libxml2-utils python3-yaml shellcheck zlib1g
 
           archive="${RUNNER_TEMP}/actionlint.tar.gz"
           curl --proto '=https' --proto-redir '=https' -fsSL \
