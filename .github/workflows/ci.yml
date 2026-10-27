@@ -18,9 +18,11 @@ concurrency:
 
 jobs:
   gate:
-    # Tracks @main so suite-wide CI fixes reach every app without a PR in each repository.
-    uses: storytold/craft-common-actions/.github/workflows/gate.yml@main
+    # Pin the inspected reusable workflow so its runner matrix is reproducible.
+    uses: storytold/craft-common-actions/.github/workflows/gate.yml@86bc2ce420c548d7b171874b67814217532a1648
     with:
+      # Keep the Linux gate leg on Spark; no platform matrix changes.
+      os: '["spark-soundcraft"]'
       packages: >-
         pkg-config libxkbcommon-dev libwayland-dev libx11-dev libxcb1-dev libxcursor-dev
         libxrandr-dev libxi-dev libfontconfig1-dev libfreetype-dev mesa-vulkan-drivers
