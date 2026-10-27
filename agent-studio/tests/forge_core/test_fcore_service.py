@@ -328,7 +328,9 @@ async def test_events_report_progress_and_completion(service: ForgeService) -> N
 
 
 async def test_eta_uses_recent_durations(service: ForgeService) -> None:
-    await run_ok(service, "generate.sfx", {"duration_s": 0.3})
+    # the seeded job carries a delay so its measured duration is well above the
+    # rounding floor on fast machines, otherwise the average is 0.0 and every eta is 0.0
+    await run_ok(service, "generate.sfx", {"duration_s": 0.3, "tags": {"x-delay_s": "0.2"}})
     blocker = await service.submit("generate.sfx", {"tags": {"x-delay_s": "1.0"}})
     await wait_state(service, blocker.job_id, "running")
     queued = await service.submit("generate.sfx", {"duration_s": 0.2})
