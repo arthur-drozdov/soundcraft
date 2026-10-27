@@ -74,8 +74,10 @@ jobs:
           tar -xzf "${archive}" -C "${install_dir}"
           chmod +x "${install_dir}/pwsh"
           echo "${install_dir}" >> "${GITHUB_PATH}"
-          "${install_dir}/pwsh" -NoLogo -NoProfile -NonInteractive \
-            -Command '$ErrorActionPreference = "Stop"; $PSVersionTable.PSVersion.ToString()'
+          "${install_dir}/pwsh" -NoLogo -NoProfile -NonInteractive -Command - <<'POWERSHELL'
+          $ErrorActionPreference = "Stop"
+          $PSVersionTable.PSVersion.ToString()
+          POWERSHELL
 
       - name: actionlint
         shell: bash
@@ -114,21 +116,21 @@ jobs:
       - name: PowerShell
         shell: bash
         run: |
-          pwsh -NoLogo -NoProfile -NonInteractive -Command '
-            $ErrorActionPreference = "Stop"
-            foreach ($file in Get-ChildItem packaging/windows/*.ps1) {
-              $errors = $null
-              [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$null, [ref]$errors) | Out-Null
-              if ($errors) {
-                $errors | ForEach-Object { Write-Output "::error file=$($file.Name)::$_" }
-                exit 1
-              }
-              Write-Output "ok $($file.Name)"
+          pwsh -NoLogo -NoProfile -NonInteractive -Command - <<'POWERSHELL'
+          $ErrorActionPreference = "Stop"
+          foreach ($file in Get-ChildItem packaging/windows/*.ps1) {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$null, [ref]$errors) | Out-Null
+            if ($errors) {
+              $errors | ForEach-Object { Write-Output "::error file=$($file.Name)::$_" }
+              exit 1
             }
-            if (Test-Path ./packaging/windows/check-icons.ps1) {
-              & ./packaging/windows/check-icons.ps1
-            }
-          '
+            Write-Output "ok $($file.Name)"
+          }
+          if (Test-Path ./packaging/windows/check-icons.ps1) {
+            & ./packaging/windows/check-icons.ps1
+          }
+          POWERSHELL
 
       - name: XML, desktop entry, AppStream, Flatpak manifest
         shell: bash
