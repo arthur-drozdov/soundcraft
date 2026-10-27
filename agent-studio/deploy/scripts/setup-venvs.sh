@@ -94,9 +94,13 @@ fetch_src() { # name url ref
 }
 
 install_agent_studio() { # venv-name extras
-  # uv-synced venvs have no pip; prefer the venv's uv when it has one.
-  if [ -x "$VENVS/$1/bin/uv" ]; then
-    "$VENVS/$1/bin/uv" pip install --python "$VENVS/$1/bin/python" "${AGENT_STUDIO_DIR}${2:-}"
+  # uv-synced venvs have no pip (and `uv sync` recreates the venv, wiping a
+  # venv-local uv too); prefer the venv's uv, then the base image's uv.
+  local uvbin=""
+  [ -x "$VENVS/$1/bin/uv" ] && uvbin="$VENVS/$1/bin/uv"
+  [ -z "$uvbin" ] && uvbin="$(command -v uv || true)"
+  if [ -n "$uvbin" ]; then
+    "$uvbin" pip install --python "$VENVS/$1/bin/python" "${AGENT_STUDIO_DIR}${2:-}"
   else
     "$VENVS/$1/bin/python" -m ensurepip --upgrade >/dev/null 2>&1 || true
     "$VENVS/$1/bin/python" -m pip install --quiet "${AGENT_STUDIO_DIR}${2:-}"
