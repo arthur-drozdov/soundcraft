@@ -86,7 +86,7 @@ spec:
         sonnia.ai/dgx-spark: "true"
       containers:
         - name: forge
-          image: ghcr.io/arthur-drozdov/forge-ci:cpu-gpu-v3
+          image: ghcr.io/arthur-drozdov/forge-ci:cpu-gpu-v4
           # The image's USER is forge(999), but setup-venvs.sh ran as root and
           # uv installed the sa3 venv's managed CPython under /root/.local/share
           # (mode 700) — unreadable to 999. Run as root until the Dockerfile
