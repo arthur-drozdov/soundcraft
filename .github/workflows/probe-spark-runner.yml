@@ -5,10 +5,11 @@ jobs:
   probe:
     runs-on: spark-soundcraft
     steps:
-      - name: rootless dockerd attempt
+      - name: what am I
         run: |
-          command -v docker-rootless.sh rootlesskit newuidmap || true
-          unshare --user --map-root-user echo "userns ok" 2>&1 | head -2
-          export XDG_RUNTIME_DIR=/tmp/xdg; mkdir -p $XDG_RUNTIME_DIR; chmod 700 $XDG_RUNTIME_DIR
-          (dockerd --rootless --iptables=false --bridge=none --storage-driver=vfs > /tmp/dockerd.log 2>&1 &) ; sleep 6
-          DOCKER_HOST=unix://$XDG_RUNTIME_DIR/docker.sock docker run --rm --net=none hello-world 2>&1 | tail -4 || tail -12 /tmp/dockerd.log
+          echo "runner=$RUNNER_NAME"
+          uname -a && nproc && free -g | head -2
+          echo "--- docker:"; docker version 2>&1 | head -6 || echo "no docker"
+          echo "--- podman:"; podman version 2>&1 | head -4 || echo "no podman"
+          echo "--- gpu:"; nvidia-smi 2>&1 | head -5 || echo "no nvidia-smi"
+          echo "--- tools:"; for t in git cargo uv pip3 python3 cmake; do command -v $t || echo "missing: $t"; done
