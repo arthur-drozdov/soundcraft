@@ -3,19 +3,26 @@ name: forge-image
 # Build and publish the Forge GPU serving image (agent-studio) to ghcr.io.
 # Runs on a GitHub-hosted arm64 runner (the image targets the GB10 Sparks,
 # linux/arm64); no cluster resources are used for building.
+#
+# A push to main publishes an immutable sha-<sha> tag (keeps the layer cache warm);
+# a release tag (cpu-gpu-vN, the one deploy-k8s/forge-gpu.yaml points at) is
+# published by workflow_dispatch so nothing overwrites a running image underfoot.
 
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Image tag to publish"
-        default: "cpu-gpu-v3"
+        description: "Image tag to publish, e.g. cpu-gpu-v5 (a new tag per build — see deploy-k8s/README.md)"
         type: string
+        required: true
   push:
     paths:
       - "agent-studio/**"
       - "deploy-k8s/**"
       - ".github/workflows/forge-image.yml"
+      # docs never change the image, and this build is long enough that a
+      # README edit should not pay for it
+      - "!**/*.md"
     branches: [main]
 
 permissions:
@@ -47,6 +54,21 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
+      - name: Publish tags
+        id: tags
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          {
+            echo "tags<<EOF"
+            echo "$IMAGE:sha-$GITHUB_SHA"
+            # a push only ever publishes an immutable sha tag; a named tag that
+            # a deployment points at is published by workflow_dispatch, so no
+            # build silently retags an image Kubernetes has already cached
+            [ -n "$TAG" ] && echo "$IMAGE:$TAG"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - uses: docker/build-push-action@v6
         with:
           context: .
@@ -56,9 +78,7 @@ jobs:
             BASE_IMAGE=nvcr.io/nvidia/pytorch:25.11-py3
             WITH_RENDER=1
             WITH_STEMS=1
-          tags: |
-            ${{ env.IMAGE }}:${{ inputs.tag || 'cpu-gpu-v3' }}
-            ${{ env.IMAGE }}:sha-${{ github.sha }}
+          tags: ${{ steps.tags.outputs.tags }}
           cache-from: type=gha,scope=forge-arm64
           cache-to: type=gha,scope=forge-arm64,mode=max
           push: true
