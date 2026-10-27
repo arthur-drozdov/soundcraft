@@ -1,0 +1,138 @@
+name: SoundCraft CI gate
+
+on:
+  workflow_call:
+    inputs:
+      command:
+        description: Gate command, run with bash from the repository root
+        type: string
+        required: false
+        default: cargo xtask ci
+      os:
+        description: JSON array of runner labels
+        type: string
+        required: false
+        default: '["ubuntu-24.04"]'
+      packages:
+        description: Ubuntu packages required by the build
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    name: gate (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(inputs.os) }}
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_INCREMENTAL: 0
+      CARGO_NET_RETRY: 10
+      RUST_BACKTRACE: 1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check out craft-fonts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: storytold/craft-fonts
+          ref: bfcbf714e45a3ea8e98f88ab2b7971372a576414
+          path: craft-fonts
+          persist-credentials: false
+
+      - name: Build with craft-fonts
+        shell: bash
+        env:
+          CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
+        run: |
+          echo "CRAFT_FONTS_DIR=$CRAFT_FONTS_DIR" >> "$GITHUB_ENV"
+          echo "CRAFT_FONTS_REQUIRED=1" >> "$GITHUB_ENV"
+
+      # The action reads craft-i18n.rev and checks out exactly that commit when present.
+      - name: Check out craft-i18n
+        uses: storytold/craft-common-actions/actions/checkout-craft-i18n@86bc2ce420c548d7b171874b67814217532a1648
+
+      # Match the shared gate's cache-key environment and debug profile.
+      - name: Caller environment
+        shell: bash
+        run: echo 'CARGO_PROFILE_DEV_DEBUG=line-tables-only' >> "$GITHUB_ENV"
+
+      - name: Free disk space
+        if: runner.os == 'Linux'
+        run: |
+          nohup sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup \
+            /opt/hostedtoolcache/CodeQL </dev/null >/dev/null 2>&1 &
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        uses: storytold/craft-common-actions/actions/install-apt-packages@86bc2ce420c548d7b171874b67814217532a1648
+        with:
+          packages: ${{ inputs.packages }}
+
+      # Spark's ARM64 image has no rustup. Install the official, versioned binary only when needed,
+      # and verify it against the SHA-256 published alongside that official artifact.
+      - name: Bootstrap rustup on Linux ARM64
+        if: runner.os == 'Linux' && runner.arch == 'ARM64'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v rustup >/dev/null 2>&1; then
+            tmp=$(mktemp)
+            trap 'rm -f "$tmp"' EXIT
+            url=https://static.rust-lang.org/rustup/archive/1.29.0/aarch64-unknown-linux-gnu/rustup-init
+            curl --fail --location --retry 3 --proto '=https' --tlsv1.2 "$url" --output "$tmp"
+            echo '9732d6c5e2a098d3521fca8145d826ae0aaa067ef2385ead08e6feac88fa5792  '"$tmp" | sha256sum --check --status
+            chmod 0755 "$tmp"
+            "$tmp" -y --no-modify-path --default-toolchain none
+          fi
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Install Rust
+        shell: bash
+        env:
+          TOOLCHAIN: stable
+          TARGETS: wasm32-unknown-unknown
+        run: |
+          set -euo pipefail
+          if [ -f rust-toolchain.toml ]; then
+            channel=$(sed -n 's/^[[:space:]]*channel[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' rust-toolchain.toml)
+            TOOLCHAIN=${channel:-$TOOLCHAIN}
+          fi
+          args=(--profile minimal --no-self-update --component clippy --component rustfmt)
+          for target in ${TARGETS//,/ }; do args+=(--target "$target"); done
+          rustup toolchain install "$TOOLCHAIN" "${args[@]}"
+          rustup default "$TOOLCHAIN"
+          rustc --version
+
+      - name: Install cargo tools
+        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
+        with:
+          tool: cargo-nextest@0.9.150
+
+      # Match the shared gate: PRs do not write the default-branch cache.
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          prefix-key: v1-rust
+          key: ${{ hashFiles('Cargo.toml') }}
+          save-if: ${{ github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch }}
+          cache-on-failure: true
+
+      - name: Gate
+        shell: bash
+        env:
+          GATE: ${{ inputs.command }}
+        run: |
+          printf '%s\n' "$GATE" > "$RUNNER_TEMP/gate.sh"
+          bash -euo pipefail "$RUNNER_TEMP/gate.sh"
+
+      - name: Lockfile unchanged
+        shell: bash
+        run: git diff --exit-code -- Cargo.lock
