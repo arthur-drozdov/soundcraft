@@ -149,9 +149,19 @@ do_stems() {
   if [ -z "$backend" ]; then
     if command -v nvcc >/dev/null 2>&1; then backend=cuda; else backend=cpu; fi
   fi
-  (cd "$SRC/stems.cpp" && ./build.sh "$backend")
+  # build.sh builds every cmake target; upstream's test binary (stems-libtest)
+  # fails to link without -lcuda. Forge only runs stems-split, so tolerate a
+  # non-zero make exit as long as the binary we need was produced (checked below).
+  (cd "$SRC/stems.cpp" && ./build.sh "$backend") || log "stems.cpp build had failures; checking for stems-split anyway"
   local found
   found="$(find "$SRC/stems.cpp" -type f -name stems-split -perm -u+x | head -n 1)"
+  if [ -z "$found" ]; then
+    # make may have aborted on the broken test target before linking stems-split;
+    # the tree is already configured, so build just that target.
+    bdir="$(find "$SRC/stems.cpp" -maxdepth 3 -name CMakeCache.txt -exec dirname {} \; 2>/dev/null | head -n 1)"
+    [ -n "$bdir" ] && { log "rebuilding just stems-split in $bdir"; cmake --build "$bdir" --target stems-split -j"$(nproc)" || true; }
+    found="$(find "$SRC/stems.cpp" -type f -name stems-split -perm -u+x | head -n 1)"
+  fi
   if [ -z "$found" ]; then
     log "stems-split not found after build; check the build output above"
     return 1
