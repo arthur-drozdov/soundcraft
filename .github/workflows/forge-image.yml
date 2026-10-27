@@ -17,11 +17,10 @@ on:
         required: true
   push:
     paths:
+      # only what actually feeds the image; the deploy-k8s manifests are not baked
+      # into it, and docs never do
       - "agent-studio/**"
-      - "deploy-k8s/**"
       - ".github/workflows/forge-image.yml"
-      # docs never change the image, and this build is long enough that a
-      # README edit should not pay for it
       - "!**/*.md"
     branches: [main]
 
@@ -30,6 +29,9 @@ permissions:
   packages: write
 
 concurrency:
+  # One heavy build at a time. Note: GitHub also *cancels a queued* run when a
+  # new one arrives in the same group, so don't push to main while waiting for a
+  # release build (workflow_dispatch) to start — it would be silently superseded.
   group: forge-image-${{ github.ref }}
   cancel-in-progress: false
 

@@ -26,6 +26,7 @@ Exits non-zero on the first failed check (all checks still run).
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import struct
@@ -77,15 +78,17 @@ class Forge:
 
     def download(self, rec: dict, out: Path) -> list[Path]:
         files = []
-        for asset_id in (rec.get("result") or {}).get("asset_ids", []):
+        for index, asset_id in enumerate((rec.get("result") or {}).get("asset_ids", [])):
             blob = self.req("GET", f"/v1/assets/{asset_id}", raw=True)
             stem = ""
             try:
                 meta = self.req("GET", f"/v1/assets/{asset_id}/meta")
-                stem = "_" + (meta.get("tags") or {}).get("stem", "")
+                # stems.split reports the stem as a top-level sidecar field ("stem"),
+                # not in tags; keep the asset id in the name so files never collide
+                stem = "_" + str(meta.get("stem") or (meta.get("tags") or {}).get("stem") or "").replace(" ", "-")
             except Exception:  # noqa: BLE001 - metadata only names the file nicer
                 pass
-            path = out / f"{rec['type'].replace('.', '-')}_{rec['job_id']}{stem}.wav"
+            path = out / f"{index}-{rec['type'].replace('.', '-')}_{asset_id}{stem}.wav"
             path.write_bytes(blob)
             files.append(path)
         return files
@@ -191,8 +194,13 @@ def main(argv: list[str]) -> int:
     for index, rec in enumerate(jobs):
         if rec.get("state") != "succeeded":
             continue
-        for path in forge.download(rec, out):
+        paths = forge.download(rec, out)
+        for path in paths:
             check_wav(path, wants.get(index))
+        if index == 1 and len(paths) > 1:
+            # three identical stems would otherwise pass every check above
+            digests = {hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
+            check("stems are distinct", len(digests) == len(paths), f"{len(digests)} distinct of {len(paths)}")
 
     print("\n" + ("ALL CHECKS PASSED" if not failures else f"{len(failures)} FAILED: {failures}"))
     return 1 if failures else 0
